@@ -18,7 +18,13 @@ interface Funnel {
   descricao: string;
   whatsapp: string;
   userId: string;
+  tipoProduto?: string;
   depoimentos?: Depoimento[];
+  paraQuem?: string;
+  bonusIncluidos?: string;
+  linkCompra?: string;
+  tempoEntrega?: string;
+  oQueInclui?: string;
 }
 
 interface LeadForm {
@@ -192,6 +198,82 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* Ebook / Curso */}
+        {(funnel.tipoProduto === "ebook" || funnel.tipoProduto === "curso") && (
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-6 space-y-3">
+            {funnel.paraQuem && (
+              <div>
+                <p className="text-blue-700 text-xs font-semibold uppercase tracking-wide mb-1">Para quem é</p>
+                <p className="text-gray-700 text-sm">{funnel.paraQuem}</p>
+              </div>
+            )}
+            {funnel.bonusIncluidos && (
+              <div>
+                <p className="text-blue-700 text-xs font-semibold uppercase tracking-wide mb-1">Bónus incluídos</p>
+                <p className="text-gray-700 text-sm">{funnel.bonusIncluidos}</p>
+              </div>
+            )}
+            {funnel.linkCompra && (
+              <a 
+                href={funnel.linkCompra}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition"
+              >
+                Comprar agora
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12,5 19,12 12,19" />
+                </svg>
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Serviço */}
+        {funnel.tipoProduto === "servico" && (
+          <div className="bg-purple-50 border border-purple-100 rounded-2xl p-5 mb-6 space-y-3">
+            {funnel.oQueInclui && (
+              <div>
+                <p className="text-purple-700 text-xs font-semibold uppercase tracking-wide mb-1">O que está incluído</p>
+                <p className="text-gray-700 text-sm">{funnel.oQueInclui}</p>
+              </div>
+            )}
+            {funnel.tempoEntrega && (
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12,6 12,12 16,14" />
+                </svg>
+                <p className="text-gray-700 text-sm">Entrega em <strong>{funnel.tempoEntrega}</strong></p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Dropshipping */}
+        {funnel.tipoProduto === "dropshipping" && (
+          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 mb-6 space-y-3">
+            {funnel.oQueInclui && (
+              <div>
+                <p className="text-orange-700 text-xs font-semibold uppercase tracking-wide mb-1">O que está incluído</p>
+                <p className="text-gray-700 text-sm">{funnel.oQueInclui}</p>
+              </div>
+            )}
+            {funnel.tempoEntrega && (
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-600">
+                  <rect x="1" y="3" width="15" height="13" />
+                  <polygon points="16,8 20,8 23,11 23,16 16,16 16,8" />
+                  <circle cx="5.5" cy="18.5" r="2.5" />
+                  <circle cx="18.5" cy="18.5" r="2.5" />
+                </svg>
+                <p className="text-gray-700 text-sm">Entrega em <strong>{funnel.tempoEntrega}</strong></p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Form */}
         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8">
           <h2 className="text-gray-900 font-bold text-lg mb-1">Tenho interesse</h2>
@@ -299,13 +381,9 @@ export default function FunnelPage() {
             <p className="text-gray-400 text-sm text-center mb-6">
               Resultados reais de pessoas reais
             </p>
-
             <div className="grid grid-cols-1 gap-4">
               {depoimentos.map((dep, index) => (
-                <div
-                  key={index}
-                  className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm"
-                >
+                <div key={index} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
                   <div className="flex gap-0.5 mb-3">
                     {[...Array(5)].map((_, i) => (
                       <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#16a34a">
@@ -313,26 +391,18 @@ export default function FunnelPage() {
                       </svg>
                     ))}
                   </div>
-
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                    &ldquo;{dep.texto}&rdquo;
-                  </p>
-
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">&ldquo;{dep.texto}&rdquo;</p>
                   <div className="flex items-center gap-3">
                     {dep.foto ? (
                       <img
                         src={dep.foto}
                         alt={dep.nome}
                         className="w-9 h-9 rounded-full object-cover border border-gray-100"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />
                     ) : (
                       <div className="w-9 h-9 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-sm font-bold uppercase">
-                          {dep.nome[0]}
-                        </span>
+                        <span className="text-white text-sm font-bold uppercase">{dep.nome[0]}</span>
                       </div>
                     )}
                     <div>
@@ -346,7 +416,6 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Footer */}
         <div className="text-center mt-10 pt-6 border-t border-gray-100">
           <p className="text-gray-300 text-xs">Powered by FunilApp</p>
         </div>

@@ -12,18 +12,32 @@ interface Depoimento {
   foto: string;
 }
 
+const tiposProduto = [
+  { value: "produto_fisico", label: "📦 Produto Físico", desc: "Roupa, calçado, electrodomésticos, etc." },
+  { value: "ebook", label: "📖 Ebook / Infoproduto", desc: "Livros digitais, PDFs, guias, etc." },
+  { value: "curso", label: "🎓 Curso Online", desc: "Formações, tutoriais, masterclasses, etc." },
+  { value: "servico", label: "🛠️ Serviço", desc: "Design, consultoria, reparação, etc." },
+  { value: "dropshipping", label: "🚚 Dropshipping", desc: "Produtos importados, revendas, etc." },
+];
+
 export default function EditFunnelPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
+  const [tipoProduto, setTipoProduto] = useState("");
   const [form, setForm] = useState({
     nomeProduto: "",
     videoUrl: "",
     preco: "",
     descricao: "",
     whatsapp: "",
+    linkCompra: "",
+    bonusIncluidos: "",
+    paraQuem: "",
+    tempoEntrega: "",
+    oQueInclui: "",
   });
 
   const [depoimentos, setDepoimentos] = useState<Depoimento[]>([
@@ -48,12 +62,18 @@ export default function EditFunnelPage() {
         router.push("/dashboard");
         return;
       }
+      setTipoProduto(data.tipoProduto ?? "");
       setForm({
         nomeProduto: data.nomeProduto ?? "",
         videoUrl: data.videoUrl ?? "",
         preco: data.preco ?? "",
         descricao: data.descricao ?? "",
         whatsapp: data.whatsapp ?? "",
+        linkCompra: data.linkCompra ?? "",
+        bonusIncluidos: data.bonusIncluidos ?? "",
+        paraQuem: data.paraQuem ?? "",
+        tempoEntrega: data.tempoEntrega ?? "",
+        oQueInclui: data.oQueInclui ?? "",
       });
       setDepoimentos(
         Array.isArray(data.depoimentos) && data.depoimentos.length > 0
@@ -110,6 +130,7 @@ export default function EditFunnelPage() {
       const depoimentosValidos = depoimentos.filter((d) => d.nome && d.texto);
       await updateDoc(doc(db, "funnels", id), {
         ...form,
+        tipoProduto,
         depoimentos: depoimentosValidos,
         updatedAt: serverTimestamp(),
       });
@@ -131,6 +152,8 @@ export default function EditFunnelPage() {
     );
   }
 
+  const inputClass = "w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition";
+
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto">
       <div className="mb-8">
@@ -149,6 +172,33 @@ export default function EditFunnelPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
 
+        {/* Tipo de produto */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Tipo de Produto <span className="text-green-600">*</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {tiposProduto.map((tipo) => (
+              <button
+                key={tipo.value}
+                type="button"
+                onClick={() => setTipoProduto(tipo.value)}
+                className={`flex items-start gap-3 px-4 py-3 rounded-lg border text-left transition ${
+                  tipoProduto === tipo.value
+                    ? "bg-green-50 border-green-500 text-green-700"
+                    : "bg-white border-gray-200 text-gray-600 hover:border-green-300"
+                }`}
+              >
+                <div>
+                  <p className="text-sm font-medium">{tipo.label}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{tipo.desc}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Campos base */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Nome do Produto <span className="text-green-600">*</span>
@@ -159,7 +209,7 @@ export default function EditFunnelPage() {
             value={form.nomeProduto}
             onChange={handleChange}
             placeholder="Ex: Curso de Marketing Digital"
-            className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+            className={inputClass}
           />
         </div>
 
@@ -199,22 +249,6 @@ export default function EditFunnelPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            URL do Vídeo
-            <span className="text-gray-400 font-normal ml-1">(opcional)</span>
-          </label>
-          <input
-            type="url"
-            name="videoUrl"
-            value={form.videoUrl}
-            onChange={handleChange}
-            placeholder="https://youtube.com/embed/..."
-            className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
-          />
-          <p className="text-gray-400 text-xs mt-1.5">Use o link de incorporação do YouTube (embed)</p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Descrição
             <span className="text-gray-400 font-normal ml-1">(opcional)</span>
           </label>
@@ -227,6 +261,120 @@ export default function EditFunnelPage() {
             className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition resize-none"
           />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            URL do Vídeo
+            <span className="text-gray-400 font-normal ml-1">(opcional)</span>
+          </label>
+          <input
+            type="url"
+            name="videoUrl"
+            value={form.videoUrl}
+            onChange={handleChange}
+            placeholder="https://youtube.com/embed/..."
+            className={inputClass}
+          />
+          <p className="text-gray-400 text-xs mt-1.5">Use o link de incorporação do YouTube (embed)</p>
+        </div>
+
+        {/* Campos específicos por tipo */}
+        {(tipoProduto === "ebook" || tipoProduto === "curso") && (
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
+            <p className="text-blue-700 text-xs font-semibold uppercase tracking-wide">
+              {tipoProduto === "ebook" ? "Detalhes do Ebook" : "Detalhes do Curso"}
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Para quem é este produto?</label>
+              <input
+                type="text"
+                name="paraQuem"
+                value={form.paraQuem}
+                onChange={handleChange}
+                placeholder="Ex: Pessoas que querem aprender a vender online"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Bónus incluídos</label>
+              <textarea
+                name="bonusIncluidos"
+                value={form.bonusIncluidos}
+                onChange={handleChange}
+                placeholder="Ex: Planilha de vendas + Grupo VIP no WhatsApp"
+                rows={2}
+                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Link de compra directa</label>
+              <input
+                type="url"
+                name="linkCompra"
+                value={form.linkCompra}
+                onChange={handleChange}
+                placeholder="Ex: https://hotmart.com/produto/..."
+                className={inputClass}
+              />
+            </div>
+          </div>
+        )}
+
+        {tipoProduto === "servico" && (
+          <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 space-y-3">
+            <p className="text-purple-700 text-xs font-semibold uppercase tracking-wide">Detalhes do Serviço</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">O que está incluído?</label>
+              <textarea
+                name="oQueInclui"
+                value={form.oQueInclui}
+                onChange={handleChange}
+                placeholder="Ex: Design do logótipo + 3 revisões + ficheiros finais"
+                rows={2}
+                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Tempo de entrega</label>
+              <input
+                type="text"
+                name="tempoEntrega"
+                value={form.tempoEntrega}
+                onChange={handleChange}
+                placeholder="Ex: 3 a 5 dias úteis"
+                className={inputClass}
+              />
+            </div>
+          </div>
+        )}
+
+        {tipoProduto === "dropshipping" && (
+          <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 space-y-3">
+            <p className="text-orange-700 text-xs font-semibold uppercase tracking-wide">Detalhes do Dropshipping</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Tempo de entrega</label>
+              <input
+                type="text"
+                name="tempoEntrega"
+                value={form.tempoEntrega}
+                onChange={handleChange}
+                placeholder="Ex: 7 a 14 dias úteis"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">O que está incluído?</label>
+              <textarea
+                name="oQueInclui"
+                value={form.oQueInclui}
+                onChange={handleChange}
+                placeholder="Ex: Produto + embalagem + entrega ao domicílio"
+                rows={2}
+                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition resize-none"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Depoimentos */}
         <div>
