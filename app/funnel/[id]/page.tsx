@@ -35,6 +35,35 @@ interface LeadForm {
   intencao: string;
 }
 
+// Converte qualquer link YouTube ou Facebook para embed
+function getEmbedUrl(url: string): { type: "youtube" | "facebook" | "unknown"; embedUrl: string } {
+  if (!url) return { type: "unknown", embedUrl: url };
+
+  // YouTube
+  const ytMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  if (ytMatch) {
+    return {
+      type: "youtube",
+      embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}`,
+    };
+  }
+
+  // YouTube embed já formatado
+  if (url.includes("youtube.com/embed/")) {
+    return { type: "youtube", embedUrl: url };
+  }
+
+  // Facebook video
+  if (url.includes("facebook.com") || url.includes("fb.watch")) {
+    const fbEmbed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=640`;
+    return { type: "facebook", embedUrl: fbEmbed };
+  }
+
+  return { type: "unknown", embedUrl: url };
+}
+
 export default function FunnelPage() {
   const { id } = useParams();
   const funnelId = Array.isArray(id) ? id[0] : id;
@@ -149,6 +178,7 @@ export default function FunnelPage() {
   }
 
   const depoimentos = funnel.depoimentos?.filter((d) => d.nome && d.texto) ?? [];
+  const video = funnel.videoUrl ? getEmbedUrl(funnel.videoUrl) : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -187,13 +217,14 @@ export default function FunnelPage() {
         </div>
 
         {/* Video */}
-        {funnel.videoUrl && (
+        {video && (
           <div className="rounded-2xl overflow-hidden mb-8 aspect-video bg-gray-900 shadow-sm">
             <iframe
-              src={funnel.videoUrl}
+              src={video.embedUrl}
               className="w-full h-full"
               allowFullScreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              style={{ border: "none" }}
             />
           </div>
         )}
@@ -214,7 +245,7 @@ export default function FunnelPage() {
               </div>
             )}
             {funnel.linkCompra && (
-              <a 
+              <a
                 href={funnel.linkCompra}
                 target="_blank"
                 rel="noopener noreferrer"
