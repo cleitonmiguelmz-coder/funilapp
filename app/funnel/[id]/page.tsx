@@ -220,12 +220,12 @@ export default function FunnelPage() {
         {video && (
           <div className="rounded-2xl overflow-hidden mb-8 aspect-video bg-gray-900 shadow-sm">
             <iframe
-              src={video.embedUrl}
-              className="w-full h-full"
-              allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              style={{ border: "none" }}
-            />
+              src={`${video.embedUrl}?autoplay=1&mute=1`}
+               className="w-full h-full"
+               allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+               style={{ border: "none" }}
+                />
           </div>
         )}
 
