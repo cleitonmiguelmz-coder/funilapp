@@ -35,27 +35,20 @@ interface LeadForm {
   intencao: string;
 }
 
-// Converte qualquer link YouTube ou Facebook para embed
 function getEmbedUrl(url: string): { type: "youtube" | "facebook" | "unknown"; embedUrl: string } {
   if (!url) return { type: "unknown", embedUrl: url };
 
-  // YouTube
   const ytMatch = url.match(
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   );
   if (ytMatch) {
-    return {
-      type: "youtube",
-      embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}`,
-    };
+    return { type: "youtube", embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}` };
   }
 
-  // YouTube embed já formatado
   if (url.includes("youtube.com/embed/")) {
     return { type: "youtube", embedUrl: url };
   }
 
-  // Facebook video
   if (url.includes("facebook.com") || url.includes("fb.watch")) {
     const fbEmbed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=640`;
     return { type: "facebook", embedUrl: fbEmbed };
@@ -180,6 +173,11 @@ export default function FunnelPage() {
   const depoimentos = funnel.depoimentos?.filter((d) => d.nome && d.texto) ?? [];
   const video = funnel.videoUrl ? getEmbedUrl(funnel.videoUrl) : null;
 
+  // Funil com link de compra directa (Hotmart etc) — sem formulário
+  const temLinkCompra =
+    (funnel.tipoProduto === "ebook" || funnel.tipoProduto === "curso") &&
+    !!funnel.linkCompra;
+
   return (
     <div className="min-h-screen bg-gray-50">
 
@@ -221,11 +219,11 @@ export default function FunnelPage() {
           <div className="rounded-2xl overflow-hidden mb-8 aspect-video bg-gray-900 shadow-sm">
             <iframe
               src={`${video.embedUrl}?autoplay=1&mute=1`}
-               className="w-full h-full"
-               allowFullScreen
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-               style={{ border: "none" }}
-                />
+              className="w-full h-full"
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              style={{ border: "none" }}
+            />
           </div>
         )}
 
@@ -243,20 +241,6 @@ export default function FunnelPage() {
                 <p className="text-blue-700 text-xs font-semibold uppercase tracking-wide mb-1">Bónus incluídos</p>
                 <p className="text-gray-700 text-sm">{funnel.bonusIncluidos}</p>
               </div>
-            )}
-            {funnel.linkCompra && (
-              <a
-                href={funnel.linkCompra}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition"
-              >
-                Comprar agora
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12,5 19,12 12,19" />
-                </svg>
-              </a>
             )}
           </div>
         )}
@@ -305,107 +289,9 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Form */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8">
-          <h2 className="text-gray-900 font-bold text-lg mb-1">Tenho interesse</h2>
-          <p className="text-gray-400 text-sm mb-6">
-            Preencha os dados abaixo e entraremos em contacto via WhatsApp
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome completo *</label>
-              <input
-                type="text"
-                name="nome"
-                value={form.nome}
-                onChange={handleChange}
-                required
-                placeholder="O seu nome"
-                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">WhatsApp *</label>
-              <input
-                type="text"
-                name="whatsapp"
-                value={form.whatsapp}
-                onChange={handleChange}
-                required
-                placeholder="84 000 0000"
-                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Cidade</label>
-              <input
-                type="text"
-                name="cidade"
-                value={form.cidade}
-                onChange={handleChange}
-                placeholder="Maputo"
-                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Forma de pagamento</label>
-              <select
-                name="pagamento"
-                value={form.pagamento}
-                onChange={handleChange}
-                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-700 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
-              >
-                <option value="">Selecione</option>
-                <option value="M-Pesa">M-Pesa</option>
-                <option value="E-Mola">E-Mola</option>
-                <option value="Transferência Bancária">Transferência Bancária</option>
-                <option value="Dinheiro">Dinheiro</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Intenção de compra</label>
-              <select
-                name="intencao"
-                value={form.intencao}
-                onChange={handleChange}
-                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-700 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
-              >
-                <option value="">Selecione</option>
-                <option value="Comprar agora">Comprar agora</option>
-                <option value="Quero para amanhã">Quero para amanhã</option>
-                <option value="Quero Agendar pra semana">Quero Agendar pra semana</option>
-                <option value="Estou a avaliar">Estou a avaliar</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-3.5 rounded-lg transition flex items-center justify-center gap-2 mt-2"
-            >
-              {submitting ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.856L.057 23.882l6.187-1.452A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.878 9.878 0 01-5.031-1.378l-.361-.214-3.741.879.936-3.629-.235-.374A9.861 9.861 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106S21.894 6.58 21.894 12 17.42 21.894 12 21.894z"/>
-                  </svg>
-                  Falar no WhatsApp
-                </>
-              )}
-            </button>
-          </form>
-        </div>
-
-        {/* Depoimentos */}
+        {/* Depoimentos — sempre visíveis */}
         {depoimentos.length > 0 && (
-          <div>
+          <div className="mb-8">
             <h2 className="text-gray-900 font-bold text-xl text-center mb-2">
               O que dizem os nossos clientes
             </h2>
@@ -447,7 +333,125 @@ export default function FunnelPage() {
           </div>
         )}
 
-        <div className="text-center mt-10 pt-6 border-t border-gray-100">
+        {/* Botão compra directa — sem formulário */}
+        {temLinkCompra ? (
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8 text-center">
+            <h2 className="text-gray-900 font-bold text-lg mb-2">Pronto para comprar?</h2>
+            <p className="text-gray-400 text-sm mb-6">Clica no botão abaixo para finalizar a tua compra</p>
+            <a
+              href={funnel.linkCompra}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-4 rounded-xl transition text-base w-full"
+            >
+              Comprar agora
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12,5 19,12 12,19" />
+              </svg>
+            </a>
+          </div>
+        ) : (
+          /* Formulário WhatsApp */
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8">
+            <h2 className="text-gray-900 font-bold text-lg mb-1">Tenho interesse</h2>
+            <p className="text-gray-400 text-sm mb-6">
+              Preencha os dados abaixo e entraremos em contacto via WhatsApp
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome completo *</label>
+                <input
+                  type="text"
+                  name="nome"
+                  value={form.nome}
+                  onChange={handleChange}
+                  required
+                  placeholder="O seu nome"
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">WhatsApp *</label>
+                <input
+                  type="text"
+                  name="whatsapp"
+                  value={form.whatsapp}
+                  onChange={handleChange}
+                  required
+                  placeholder="84 000 0000"
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Cidade</label>
+                <input
+                  type="text"
+                  name="cidade"
+                  value={form.cidade}
+                  onChange={handleChange}
+                  placeholder="Maputo"
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Forma de pagamento</label>
+                <select
+                  name="pagamento"
+                  value={form.pagamento}
+                  onChange={handleChange}
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-700 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                >
+                  <option value="">Selecione</option>
+                  <option value="M-Pesa">M-Pesa</option>
+                  <option value="E-Mola">E-Mola</option>
+                  <option value="Transferência Bancária">Transferência Bancária</option>
+                  <option value="Dinheiro">Dinheiro</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Intenção de compra</label>
+                <select
+                  name="intencao"
+                  value={form.intencao}
+                  onChange={handleChange}
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-700 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                >
+                  <option value="">Selecione</option>
+                  <option value="Comprar agora">Comprar agora</option>
+                  <option value="Quero para amanhã">Quero para amanhã</option>
+                  <option value="Quero Agendar pra semana">Quero Agendar pra semana</option>
+                  <option value="Estou a avaliar">Estou a avaliar</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-3.5 rounded-lg transition flex items-center justify-center gap-2 mt-2"
+              >
+                {submitting ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.856L.057 23.882l6.187-1.452A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.878 9.878 0 01-5.031-1.378l-.361-.214-3.741.879.936-3.629-.235-.374A9.861 9.861 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106S21.894 6.58 21.894 12 17.42 21.894 12 21.894z"/>
+                    </svg>
+                    Falar no WhatsApp
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
+
+        <div className="text-center mt-4 pt-6 border-t border-gray-100">
           <p className="text-gray-300 text-xs">Powered by FunilApp</p>
         </div>
       </div>
