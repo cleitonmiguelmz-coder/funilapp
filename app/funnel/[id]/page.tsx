@@ -89,6 +89,15 @@ export default function FunnelPage() {
         return;
       }
       setFunnel(snap.data() as Funnel);
+
+      // NOVO — regista a visita
+      await addDoc(collection(db, "visits"), {
+        funnelId,
+        userId: snap.data().userId,
+        nomeProduto: snap.data().nomeProduto,
+        createdAt: serverTimestamp(),
+      });
+
     } catch (err) {
       console.error(err);
       setNotFound(true);
@@ -173,7 +182,6 @@ export default function FunnelPage() {
   const depoimentos = funnel.depoimentos?.filter((d) => d.nome && d.texto) ?? [];
   const video = funnel.videoUrl ? getEmbedUrl(funnel.videoUrl) : null;
 
-  // Funil com link de compra directa (Hotmart etc) — sem formulário
   const temLinkCompra =
     (funnel.tipoProduto === "ebook" || funnel.tipoProduto === "curso") &&
     !!funnel.linkCompra;
@@ -181,7 +189,6 @@ export default function FunnelPage() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* Header */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-green-600 flex items-center justify-center">
@@ -195,7 +202,6 @@ export default function FunnelPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-10">
 
-        {/* Hero */}
         <div className="text-center mb-8">
           <span className="inline-block bg-green-50 text-green-700 text-xs font-semibold px-3 py-1 rounded-full border border-green-100 mb-4">
             Oferta Especial
@@ -214,7 +220,6 @@ export default function FunnelPage() {
           </div>
         </div>
 
-        {/* Video */}
         {video && (
           <div className="rounded-2xl overflow-hidden mb-8 aspect-video bg-gray-900 shadow-sm">
             <iframe
@@ -227,7 +232,6 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Ebook / Curso */}
         {(funnel.tipoProduto === "ebook" || funnel.tipoProduto === "curso") && (
           <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-6 space-y-3">
             {funnel.paraQuem && (
@@ -245,7 +249,6 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Serviço */}
         {funnel.tipoProduto === "servico" && (
           <div className="bg-purple-50 border border-purple-100 rounded-2xl p-5 mb-6 space-y-3">
             {funnel.oQueInclui && (
@@ -266,7 +269,6 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Dropshipping */}
         {funnel.tipoProduto === "dropshipping" && (
           <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 mb-6 space-y-3">
             {funnel.oQueInclui && (
@@ -289,7 +291,6 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Depoimentos — sempre visíveis */}
         {depoimentos.length > 0 && (
           <div className="mb-8">
             <h2 className="text-gray-900 font-bold text-xl text-center mb-2">
@@ -333,7 +334,6 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Botão compra directa — sem formulário */}
         {temLinkCompra ? (
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8 text-center">
             <h2 className="text-gray-900 font-bold text-lg mb-2">Pronto para comprar?</h2>
@@ -352,7 +352,6 @@ export default function FunnelPage() {
             </a>
           </div>
         ) : (
-          /* Formulário WhatsApp */
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8">
             <h2 className="text-gray-900 font-bold text-lg mb-1">Tenho interesse</h2>
             <p className="text-gray-400 text-sm mb-6">

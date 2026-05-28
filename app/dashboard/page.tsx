@@ -1,8 +1,11 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { useEffect, useState, useRef } from "react";
+import {
+  collection, query, where, getDocs, deleteDoc, doc,
+  onSnapshot, orderBy, limit, Timestamp
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,6 +27,14 @@ interface Lead {
   funnelId: string;
 }
 
+interface Notification {
+  id: string;
+  nomeProduto: string;
+  funnelId: string;
+  createdAt: Timestamp;
+  lida: boolean;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -35,10 +46,82 @@ export default function DashboardPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
+  // Notificações
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [toasts, setToasts] = useState<Notification[]>([]);
+  const isFirstLoad = useRef(true);
+
   useEffect(() => {
     if (!user) return;
     fetchFunnels();
+    subscribeToVisits();
   }, [user]);
+
+  // Actualiza título da aba
+  useEffect(() => {
+    if (unreadCount > 0) {
+      document.title = `(${unreadCount}) FunilApp`;
+    } else {
+      document.title = "FunilApp";
+    }
+  }, [unreadCount]);
+
+  const subscribeToVisits = () => {
+    const visitsQuery = query(
+      collection(db, "visits"),
+      where("userId", "==", user!.uid),
+      orderBy("createdAt", "desc"),
+      limit(20)
+    );
+
+    const unsub = onSnapshot(visitsQuery, (snap) => {
+      const data: Notification[] = snap.docs.map((d) => ({
+        id: d.id,
+        nomeProduto: d.data().nomeProduto ?? "Funil",
+        funnelId: d.data().funnelId,
+        createdAt: d.data().createdAt,
+        lida: false,
+      }));
+
+      setNotifications(data);
+      setUnreadCount(data.length);
+
+      // Não mostra toast no carregamento inicial
+      if (isFirstLoad.current) {
+        isFirstLoad.current = false;
+        return;
+      }
+
+      // Mostra toast só para a visita mais recente
+      const newest = data[0];
+      if (newest) {
+        showToast(newest);
+      }
+    });
+
+    return unsub;
+  };
+
+  const showToast = (notif: Notification) => {
+    const id = notif.id + Date.now();
+    const toast = { ...notif, id };
+    setToasts((prev) => [toast, ...prev].slice(0, 3));
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  };
+
+  const clearNotifications = () => {
+    setUnreadCount(0);
+    document.title = "FunilApp";
+  };
+
+  const formatTime = (ts: Timestamp) => {
+    if (!ts?.seconds) return "";
+    const date = new Date(ts.seconds * 1000);
+    return date.toLocaleTimeString("pt-MZ", { hour: "2-digit", minute: "2-digit" });
+  };
 
   const fetchFunnels = async () => {
     try {
@@ -182,6 +265,28 @@ export default function DashboardPage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
 
+      {/* Toasts — notificações no canto */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className="pointer-events-auto bg-white border border-gray-100 rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-[320px] animate-slide-in"
+          >
+            <div className="w-9 h-9 rounded-full bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-900 text-sm font-semibold truncate">Nova visita!</p>
+              <p className="text-gray-400 text-xs truncate">{toast.nomeProduto}</p>
+            </div>
+            <span className="text-gray-300 text-xs flex-shrink-0">{formatTime(toast.createdAt)}</span>
+          </div>
+        ))}
+      </div>
+
       {/* Modal apagar */}
       {confirmDeleteId && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -220,9 +325,28 @@ export default function DashboardPage() {
       )}
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Visão Geral</h1>
-        <p className="text-gray-400 text-sm mt-1">Gerencie seus funis e acompanhe seus leads</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Visão Geral</h1>
+          <p className="text-gray-400 text-sm mt-1">Gerencie seus funis e acompanhe seus leads</p>
+        </div>
+        {/* Sino de notificações */}
+        {notifications.length > 0 && (
+          <button
+            onClick={clearNotifications}
+            className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-100 hover:border-green-200 transition shadow-sm"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-green-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -278,6 +402,32 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Visitas recentes */}
+      {notifications.length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-gray-700 font-semibold text-sm">Visitas recentes</h3>
+            <span className="text-xs text-gray-400">{notifications.length} visitas</span>
+          </div>
+          <div className="space-y-3">
+            {notifications.slice(0, 5).map((n) => (
+              <div key={n.id} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-gray-700 text-sm font-medium truncate">{n.nomeProduto}</p>
+                </div>
+                <span className="text-gray-300 text-xs flex-shrink-0">{formatTime(n.createdAt)}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
