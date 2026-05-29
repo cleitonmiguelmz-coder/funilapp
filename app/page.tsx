@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -46,11 +47,7 @@ export default function HomePage() {
       <header className="border-b border-gray-100 sticky top-0 bg-white/90 backdrop-blur-sm z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-              </svg>
-            </div>
+            <Image src="/logo.png" alt="FunilApp" width={32} height={32} className="rounded-lg" />
             <span className="text-gray-900 font-bold text-lg tracking-tight">FunilApp</span>
           </div>
           <div className="flex items-center gap-4">
@@ -217,11 +214,7 @@ export default function HomePage() {
             className="flex items-center gap-2 cursor-default select-none"
             onClick={handleLogoClick}
           >
-            <div className="w-6 h-6 rounded-md bg-green-600 flex items-center justify-center">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-              </svg>
-            </div>
+            <Image src="/logo.png" alt="FunilApp" width={24} height={24} className="rounded-md" />
             <span className="text-gray-700 font-bold text-sm">FunilApp</span>
           </div>
           <p className="text-gray-400 text-xs">© 2026 FunilApp. Todos os direitos reservados.</p>
