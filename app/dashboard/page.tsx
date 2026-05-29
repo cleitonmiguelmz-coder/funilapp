@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
-import { activarNotificacoes } from "@/lib/fcm";
 
 interface Funnel {
   id: string;
@@ -59,13 +58,13 @@ export default function DashboardPage() {
     if (!user) return;
     fetchFunnels();
     subscribeToVisits();
-    // Verifica se já deu permissão antes
-    if (Notification.permission === "granted") {
-      setNotifActivadas(true);
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "granted") {
+        setNotifActivadas(true);
+      }
     }
   }, [user]);
 
-  // Actualiza título da aba
   useEffect(() => {
     if (unreadCount > 0) {
       document.title = `(${unreadCount}) FunilApp`;
@@ -131,8 +130,13 @@ export default function DashboardPage() {
   const handleActivarNotif = async () => {
     if (!user) return;
     setNotifLoading(true);
-    const ok = await activarNotificacoes(user.uid);
-    setNotifActivadas(ok);
+    try {
+      const { activarNotificacoes } = await import("@/lib/fcm");
+      const ok = await activarNotificacoes(user.uid);
+      setNotifActivadas(ok);
+    } catch (err) {
+      console.error(err);
+    }
     setNotifLoading(false);
   };
 
@@ -278,7 +282,7 @@ export default function DashboardPage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
 
-      {/* Toasts — notificações no canto */}
+      {/* Toasts */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
         {toasts.map((toast) => (
           <div
@@ -344,7 +348,6 @@ export default function DashboardPage() {
           <p className="text-gray-400 text-sm mt-1">Gerencie seus funis e acompanhe seus leads</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Botão activar notificações */}
           {!notifActivadas && (
             <button
               onClick={handleActivarNotif}
@@ -370,7 +373,6 @@ export default function DashboardPage() {
               Notificações activas
             </span>
           )}
-          {/* Sino */}
           {notifications.length > 0 && (
             <button
               onClick={clearNotifications}

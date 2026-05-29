@@ -18,6 +18,7 @@ export const auth = getAuth(app);
 
 export const getMessagingInstance = async () => {
   if (typeof window === "undefined") return null;
+  if (!("serviceWorker" in navigator)) return null;
   try {
     const { getMessaging, isSupported } = await import("firebase/messaging");
     const supported = await isSupported();
