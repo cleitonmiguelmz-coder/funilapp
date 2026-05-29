@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
+import { activarNotificacoes } from "@/lib/fcm";
 
 interface Funnel {
   id: string;
@@ -51,11 +52,17 @@ export default function DashboardPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [toasts, setToasts] = useState<Notification[]>([]);
   const isFirstLoad = useRef(true);
+  const [notifActivadas, setNotifActivadas] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     fetchFunnels();
     subscribeToVisits();
+    // Verifica se já deu permissão antes
+    if (Notification.permission === "granted") {
+      setNotifActivadas(true);
+    }
   }, [user]);
 
   // Actualiza título da aba
@@ -87,13 +94,11 @@ export default function DashboardPage() {
       setNotifications(data);
       setUnreadCount(data.length);
 
-      // Não mostra toast no carregamento inicial
       if (isFirstLoad.current) {
         isFirstLoad.current = false;
         return;
       }
 
-      // Mostra toast só para a visita mais recente
       const newest = data[0];
       if (newest) {
         showToast(newest);
@@ -121,6 +126,14 @@ export default function DashboardPage() {
     if (!ts?.seconds) return "";
     const date = new Date(ts.seconds * 1000);
     return date.toLocaleTimeString("pt-MZ", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const handleActivarNotif = async () => {
+    if (!user) return;
+    setNotifLoading(true);
+    const ok = await activarNotificacoes(user.uid);
+    setNotifActivadas(ok);
+    setNotifLoading(false);
   };
 
   const fetchFunnels = async () => {
@@ -270,7 +283,7 @@ export default function DashboardPage() {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className="pointer-events-auto bg-white border border-gray-100 rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-[320px] animate-slide-in"
+            className="pointer-events-auto bg-white border border-gray-100 rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-[320px]"
           >
             <div className="w-9 h-9 rounded-full bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
@@ -325,28 +338,56 @@ export default function DashboardPage() {
       )}
 
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Visão Geral</h1>
           <p className="text-gray-400 text-sm mt-1">Gerencie seus funis e acompanhe seus leads</p>
         </div>
-        {/* Sino de notificações */}
-        {notifications.length > 0 && (
-          <button
-            onClick={clearNotifications}
-            className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-100 hover:border-green-200 transition shadow-sm"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-green-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Botão activar notificações */}
+          {!notifActivadas && (
+            <button
+              onClick={handleActivarNotif}
+              disabled={notifLoading}
+              className="flex items-center gap-2 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-100 rounded-lg px-3 py-2 transition disabled:opacity-50"
+            >
+              {notifLoading ? (
+                <div className="w-3 h-3 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin" />
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+              )}
+              Activar notificações
+            </button>
+          )}
+          {notifActivadas && (
+            <span className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20,6 9,17 4,12" />
+              </svg>
+              Notificações activas
+            </span>
+          )}
+          {/* Sino */}
+          {notifications.length > 0 && (
+            <button
+              onClick={clearNotifications}
+              className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-100 hover:border-green-200 transition shadow-sm"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-green-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stats */}

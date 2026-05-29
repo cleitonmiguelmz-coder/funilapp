@@ -88,15 +88,30 @@ export default function FunnelPage() {
         setNotFound(true);
         return;
       }
-      setFunnel(snap.data() as Funnel);
+      const data = snap.data() as Funnel;
+      setFunnel(data);
 
-      // NOVO — regista a visita
+      // Regista a visita
       await addDoc(collection(db, "visits"), {
         funnelId,
-        userId: snap.data().userId,
-        nomeProduto: snap.data().nomeProduto,
+        userId: data.userId,
+        nomeProduto: data.nomeProduto,
         createdAt: serverTimestamp(),
       });
+
+      // Envia notificação push para o dono do funil
+      const userSnap = await getDoc(doc(db, "users", data.userId));
+      if (userSnap.exists() && userSnap.data().fcmToken) {
+        await fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: userSnap.data().fcmToken,
+            title: "👁️ Nova visita no teu funil!",
+            body: data.nomeProduto,
+          }),
+        });
+      }
 
     } catch (err) {
       console.error(err);
@@ -333,12 +348,12 @@ export default function FunnelPage() {
             </div>
           </div>
         )}
-
+        
         {temLinkCompra ? (
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8 text-center">
             <h2 className="text-gray-900 font-bold text-lg mb-2">Pronto para comprar?</h2>
             <p className="text-gray-400 text-sm mb-6">Clica no botão abaixo para finalizar a tua compra</p>
-            <a
+           <a    
               href={funnel.linkCompra}
               target="_blank"
               rel="noopener noreferrer"
