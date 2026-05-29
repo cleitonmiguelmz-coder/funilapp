@@ -53,6 +53,7 @@ export default function DashboardPage() {
   const isFirstLoad = useRef(true);
   const [notifActivadas, setNotifActivadas] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [notifErro, setNotifErro] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -130,12 +131,40 @@ export default function DashboardPage() {
   const handleActivarNotif = async () => {
     if (!user) return;
     setNotifLoading(true);
+    setNotifErro(null);
     try {
+      console.log("1. A iniciar...");
+
+      if (!("Notification" in window)) {
+        setNotifErro("O teu browser não suporta notificações.");
+        setNotifLoading(false);
+        return;
+      }
+
+      console.log("2. Permissão actual:", Notification.permission);
+
+      const permission = await Notification.requestPermission();
+      console.log("3. Permissão dada:", permission);
+
+      if (permission !== "granted") {
+        setNotifErro("Permissão negada. Vai às definições do browser e permite notificações para este site.");
+        setNotifLoading(false);
+        return;
+      }
+
+      console.log("4. A carregar FCM...");
       const { activarNotificacoes } = await import("@/lib/fcm");
       const ok = await activarNotificacoes(user.uid);
+      console.log("5. Resultado:", ok);
+
+      if (!ok) {
+        setNotifErro("Não foi possível activar. O teu browser pode não suportar notificações push.");
+      }
+
       setNotifActivadas(ok);
     } catch (err) {
-      console.error(err);
+      console.error("Erro:", err);
+      setNotifErro("Erro ao activar: " + String(err));
     }
     setNotifLoading(false);
   };
@@ -349,21 +378,26 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           {!notifActivadas && (
-            <button
-              onClick={handleActivarNotif}
-              disabled={notifLoading}
-              className="flex items-center gap-2 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-100 rounded-lg px-3 py-2 transition disabled:opacity-50"
-            >
-              {notifLoading ? (
-                <div className="w-3 h-3 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin" />
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
+            <div className="flex flex-col items-end gap-1">
+              <button
+                onClick={handleActivarNotif}
+                disabled={notifLoading}
+                className="flex items-center gap-2 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-100 rounded-lg px-3 py-2 transition disabled:opacity-50"
+              >
+                {notifLoading ? (
+                  <div className="w-3 h-3 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin" />
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                )}
+                Activar notificações
+              </button>
+              {notifErro && (
+                <p className="text-red-500 text-xs max-w-[200px] text-right">{notifErro}</p>
               )}
-              Activar notificações
-            </button>
+            </div>
           )}
           {notifActivadas && (
             <span className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
