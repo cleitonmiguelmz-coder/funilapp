@@ -76,6 +76,21 @@ export default function FunnelPage() {
     intencao: "",
   });
 
+  // Força modo claro no mobile independente das preferências do sistema
+  useEffect(() => {
+    document.documentElement.style.colorScheme = "light";
+    document.documentElement.setAttribute("data-theme", "light");
+    const meta = document.createElement("meta");
+    meta.name = "color-scheme";
+    meta.content = "light";
+    document.head.appendChild(meta);
+    return () => {
+      document.head.removeChild(meta);
+      document.documentElement.style.colorScheme = "";
+      document.documentElement.removeAttribute("data-theme");
+    };
+  }, []);
+
   useEffect(() => {
     if (!funnelId) return;
     fetchFunnel();
@@ -92,7 +107,6 @@ export default function FunnelPage() {
       const data = snap.data() as Funnel;
       setFunnel(data);
 
-      // Regista a visita — não bloqueia se falhar
       try {
         await addDoc(collection(db, "visits"), {
           funnelId,
@@ -104,7 +118,6 @@ export default function FunnelPage() {
         console.error("Erro ao registar visita:", e);
       }
 
-      // Notificação — não bloqueia se falhar
       try {
         const userSnap = await getDoc(doc(db, "users", data.userId));
         if (userSnap.exists() && userSnap.data().fcmToken) {
@@ -163,7 +176,7 @@ export default function FunnelPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div style={{ colorScheme: "light" }} className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -171,7 +184,7 @@ export default function FunnelPage() {
 
   if (notFound || !funnel) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div style={{ colorScheme: "light" }} className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
@@ -189,7 +202,7 @@ export default function FunnelPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div style={{ colorScheme: "light" }} className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
@@ -211,41 +224,44 @@ export default function FunnelPage() {
     !!funnel.linkCompra;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ colorScheme: "light", backgroundColor: "#f9fafb", color: "#111827" }} className="min-h-screen bg-gray-50">
 
-      <div className="bg-white border-b border-gray-100">
+      {/* Header */}
+      <div style={{ backgroundColor: "#ffffff", borderBottom: "1px solid #f3f4f6" }}>
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-green-600 flex items-center justify-center">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
             </svg>
           </div>
-          <span className="text-gray-900 font-bold text-sm">FunilApp</span>
+          <span style={{ color: "#111827" }} className="font-bold text-sm">FunilApp</span>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-10">
 
+        {/* Hero */}
         <div className="text-center mb-8">
-          <span className="inline-block bg-green-50 text-green-700 text-xs font-semibold px-3 py-1 rounded-full border border-green-100 mb-4">
+          <span style={{ backgroundColor: "#f0fdf4", color: "#15803d", border: "1px solid #dcfce7" }} className="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4">
             Oferta Especial
           </span>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-3">
+          <h1 style={{ color: "#111827" }} className="text-3xl md:text-4xl font-bold leading-tight mb-3">
             {funnel.nomeProduto}
           </h1>
           {funnel.descricao && (
-            <p className="text-gray-500 text-base leading-relaxed mb-4">{funnel.descricao}</p>
+            <p style={{ color: "#6b7280" }} className="text-base leading-relaxed mb-4">{funnel.descricao}</p>
           )}
-          <div className="inline-flex items-center gap-1 bg-green-50 border border-green-100 rounded-xl px-5 py-2.5 mt-2">
-            <span className="text-green-600 text-sm font-medium">Apenas</span>
-            <span className="text-2xl font-bold text-green-700 ml-1">
+          <div style={{ backgroundColor: "#f0fdf4", border: "1px solid #dcfce7" }} className="inline-flex items-center gap-1 rounded-xl px-5 py-2.5 mt-2">
+            <span style={{ color: "#16a34a" }} className="text-sm font-medium">Apenas</span>
+            <span style={{ color: "#15803d" }} className="text-2xl font-bold ml-1">
               {Number(funnel.preco).toLocaleString("pt-MZ", { style: "currency", currency: "MZN" })}
             </span>
           </div>
         </div>
 
+        {/* Video */}
         {video && (
-          <div className="rounded-2xl overflow-hidden mb-8 aspect-video bg-gray-900 shadow-sm">
+          <div className="rounded-2xl overflow-hidden mb-8 aspect-video shadow-sm" style={{ backgroundColor: "#111827" }}>
             <iframe
               src={video.embedUrl}
               className="w-full h-full"
@@ -256,76 +272,73 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* Tipo: ebook / curso */}
         {(funnel.tipoProduto === "ebook" || funnel.tipoProduto === "curso") && (
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-6 space-y-3">
+          <div style={{ backgroundColor: "#eff6ff", border: "1px solid #dbeafe" }} className="rounded-2xl p-5 mb-6 space-y-3">
             {funnel.paraQuem && (
               <div>
-                <p className="text-blue-700 text-xs font-semibold uppercase tracking-wide mb-1">Para quem é</p>
-                <p className="text-gray-700 text-sm">{funnel.paraQuem}</p>
+                <p style={{ color: "#1d4ed8" }} className="text-xs font-semibold uppercase tracking-wide mb-1">Para quem é</p>
+                <p style={{ color: "#374151" }} className="text-sm">{funnel.paraQuem}</p>
               </div>
             )}
             {funnel.bonusIncluidos && (
               <div>
-                <p className="text-blue-700 text-xs font-semibold uppercase tracking-wide mb-1">Bónus incluídos</p>
-                <p className="text-gray-700 text-sm">{funnel.bonusIncluidos}</p>
+                <p style={{ color: "#1d4ed8" }} className="text-xs font-semibold uppercase tracking-wide mb-1">Bónus incluídos</p>
+                <p style={{ color: "#374151" }} className="text-sm">{funnel.bonusIncluidos}</p>
               </div>
             )}
           </div>
         )}
 
+        {/* Tipo: serviço */}
         {funnel.tipoProduto === "servico" && (
-          <div className="bg-purple-50 border border-purple-100 rounded-2xl p-5 mb-6 space-y-3">
+          <div style={{ backgroundColor: "#faf5ff", border: "1px solid #e9d5ff" }} className="rounded-2xl p-5 mb-6 space-y-3">
             {funnel.oQueInclui && (
               <div>
-                <p className="text-purple-700 text-xs font-semibold uppercase tracking-wide mb-1">O que está incluído</p>
-                <p className="text-gray-700 text-sm">{funnel.oQueInclui}</p>
+                <p style={{ color: "#7e22ce" }} className="text-xs font-semibold uppercase tracking-wide mb-1">O que está incluído</p>
+                <p style={{ color: "#374151" }} className="text-sm">{funnel.oQueInclui}</p>
               </div>
             )}
             {funnel.tempoEntrega && (
               <div className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12,6 12,12 16,14" />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7e22ce" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" /><polyline points="12,6 12,12 16,14" />
                 </svg>
-                <p className="text-gray-700 text-sm">Entrega em <strong>{funnel.tempoEntrega}</strong></p>
+                <p style={{ color: "#374151" }} className="text-sm">Entrega em <strong>{funnel.tempoEntrega}</strong></p>
               </div>
             )}
           </div>
         )}
 
+        {/* Tipo: dropshipping */}
         {funnel.tipoProduto === "dropshipping" && (
-          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 mb-6 space-y-3">
+          <div style={{ backgroundColor: "#fff7ed", border: "1px solid #fed7aa" }} className="rounded-2xl p-5 mb-6 space-y-3">
             {funnel.oQueInclui && (
               <div>
-                <p className="text-orange-700 text-xs font-semibold uppercase tracking-wide mb-1">O que está incluído</p>
-                <p className="text-gray-700 text-sm">{funnel.oQueInclui}</p>
+                <p style={{ color: "#c2410c" }} className="text-xs font-semibold uppercase tracking-wide mb-1">O que está incluído</p>
+                <p style={{ color: "#374151" }} className="text-sm">{funnel.oQueInclui}</p>
               </div>
             )}
             {funnel.tempoEntrega && (
               <div className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-600">
-                  <rect x="1" y="3" width="15" height="13" />
-                  <polygon points="16,8 20,8 23,11 23,16 16,16 16,8" />
-                  <circle cx="5.5" cy="18.5" r="2.5" />
-                  <circle cx="18.5" cy="18.5" r="2.5" />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c2410c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="3" width="15" height="13" /><polygon points="16,8 20,8 23,11 23,16 16,16 16,8" />
+                  <circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
                 </svg>
-                <p className="text-gray-700 text-sm">Entrega em <strong>{funnel.tempoEntrega}</strong></p>
+                <p style={{ color: "#374151" }} className="text-sm">Entrega em <strong>{funnel.tempoEntrega}</strong></p>
               </div>
             )}
           </div>
         )}
 
+        {/* Depoimentos */}
         {depoimentos.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-gray-900 font-bold text-xl text-center mb-2">
-              O que dizem os nossos clientes
-            </h2>
-            <p className="text-gray-400 text-sm text-center mb-6">
-              Resultados reais de pessoas reais
-            </p>
+            <h2 style={{ color: "#111827" }} className="font-bold text-xl text-center mb-2">O que dizem os nossos clientes</h2>
+            <p style={{ color: "#9ca3af" }} className="text-sm text-center mb-6">Resultados reais de pessoas reais</p>
             <div className="grid grid-cols-1 gap-4">
               {depoimentos.map((dep, index) => (
-                <div key={index} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+                <div key={index} style={{ backgroundColor: "#ffffff", border: "1px solid #f3f4f6" }} className="rounded-xl p-5 shadow-sm">
                   <div className="flex gap-0.5 mb-3">
                     {[...Array(5)].map((_, i) => (
                       <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#16a34a">
@@ -333,23 +346,19 @@ export default function FunnelPage() {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">&ldquo;{dep.texto}&rdquo;</p>
+                  <p style={{ color: "#4b5563" }} className="text-sm leading-relaxed mb-4">&ldquo;{dep.texto}&rdquo;</p>
                   <div className="flex items-center gap-3">
                     {dep.foto ? (
-                      <img
-                        src={dep.foto}
-                        alt={dep.nome}
-                        className="w-9 h-9 rounded-full object-cover border border-gray-100"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                      />
+                      <img src={dep.foto} alt={dep.nome} className="w-9 h-9 rounded-full object-cover" style={{ border: "1px solid #f3f4f6" }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                     ) : (
                       <div className="w-9 h-9 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-sm font-bold uppercase">{dep.nome[0]}</span>
                       </div>
                     )}
                     <div>
-                      <p className="text-gray-900 text-sm font-semibold">{dep.nome}</p>
-                      <p className="text-gray-400 text-xs">Cliente verificado</p>
+                      <p style={{ color: "#111827" }} className="text-sm font-semibold">{dep.nome}</p>
+                      <p style={{ color: "#9ca3af" }} className="text-xs">Cliente verificado</p>
                     </div>
                   </div>
                 </div>
@@ -357,12 +366,13 @@ export default function FunnelPage() {
             </div>
           </div>
         )}
-        
+
+        {/* CTA ou Formulário */}
         {temLinkCompra ? (
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8 text-center">
-            <h2 className="text-gray-900 font-bold text-lg mb-2">Pronto para comprar?</h2>
-            <p className="text-gray-400 text-sm mb-6">Clica no botão abaixo para finalizar a tua compra</p>
-            <a    
+          <div style={{ backgroundColor: "#ffffff", border: "1px solid #f3f4f6" }} className="rounded-2xl p-6 shadow-sm mb-8 text-center">
+            <h2 style={{ color: "#111827" }} className="font-bold text-lg mb-2">Pronto para comprar?</h2>
+            <p style={{ color: "#9ca3af" }} className="text-sm mb-6">Clica no botão abaixo para finalizar a tua compra</p>
+            <a
               href={funnel.linkCompra}
               target="_blank"
               rel="noopener noreferrer"
@@ -370,64 +380,52 @@ export default function FunnelPage() {
             >
               Comprar agora
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12,5 19,12 12,19" />
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12,5 19,12 12,19" />
               </svg>
             </a>
           </div>
         ) : (
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8">
-            <h2 className="text-gray-900 font-bold text-lg mb-1">Tenho interesse</h2>
-            <p className="text-gray-400 text-sm mb-6">
-              Preencha os dados abaixo e entraremos em contacto via WhatsApp
-            </p>
+          <div style={{ backgroundColor: "#ffffff", border: "1px solid #f3f4f6" }} className="rounded-2xl p-6 shadow-sm mb-8">
+            <h2 style={{ color: "#111827" }} className="font-bold text-lg mb-1">Tenho interesse</h2>
+            <p style={{ color: "#9ca3af" }} className="text-sm mb-6">Preencha os dados abaixo e entraremos em contacto via WhatsApp</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome completo *</label>
+                <label style={{ color: "#374151" }} className="block text-sm font-medium mb-1.5">Nome completo *</label>
                 <input
-                  type="text"
-                  name="nome"
-                  value={form.nome}
-                  onChange={handleChange}
-                  required
+                  type="text" name="nome" value={form.nome} onChange={handleChange} required
                   placeholder="O seu nome"
-                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                  style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#111827" }}
+                  className="w-full rounded-lg px-4 py-3 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">WhatsApp *</label>
+                <label style={{ color: "#374151" }} className="block text-sm font-medium mb-1.5">WhatsApp *</label>
                 <input
-                  type="text"
-                  name="whatsapp"
-                  value={form.whatsapp}
-                  onChange={handleChange}
-                  required
+                  type="text" name="whatsapp" value={form.whatsapp} onChange={handleChange} required
                   placeholder="84 000 0000"
-                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                  style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#111827" }}
+                  className="w-full rounded-lg px-4 py-3 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Cidade</label>
+                <label style={{ color: "#374151" }} className="block text-sm font-medium mb-1.5">Cidade</label>
                 <input
-                  type="text"
-                  name="cidade"
-                  value={form.cidade}
-                  onChange={handleChange}
+                  type="text" name="cidade" value={form.cidade} onChange={handleChange}
                   placeholder="Maputo"
-                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                  style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#111827" }}
+                  className="w-full rounded-lg px-4 py-3 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Forma de pagamento</label>
+                <label style={{ color: "#374151" }} className="block text-sm font-medium mb-1.5">Forma de pagamento</label>
                 <select
-                  name="pagamento"
-                  value={form.pagamento}
-                  onChange={handleChange}
-                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-700 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                  name="pagamento" value={form.pagamento} onChange={handleChange}
+                  style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#374151" }}
+                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
                 >
                   <option value="">Selecione</option>
                   <option value="M-Pesa">M-Pesa</option>
@@ -438,12 +436,11 @@ export default function FunnelPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Intenção de compra</label>
+                <label style={{ color: "#374151" }} className="block text-sm font-medium mb-1.5">Intenção de compra</label>
                 <select
-                  name="intencao"
-                  value={form.intencao}
-                  onChange={handleChange}
-                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-700 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
+                  name="intencao" value={form.intencao} onChange={handleChange}
+                  style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#374151" }}
+                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition"
                 >
                   <option value="">Selecione</option>
                   <option value="Comprar agora">Comprar agora</option>
@@ -454,8 +451,7 @@ export default function FunnelPage() {
               </div>
 
               <button
-                type="submit"
-                disabled={submitting}
+                type="submit" disabled={submitting}
                 className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-3.5 rounded-lg transition flex items-center justify-center gap-2 mt-2"
               >
                 {submitting ? (
@@ -474,8 +470,8 @@ export default function FunnelPage() {
           </div>
         )}
 
-        <div className="text-center mt-4 pt-6 border-t border-gray-100">
-          <p className="text-gray-300 text-xs">Powered by FunilApp</p>
+        <div style={{ borderTop: "1px solid #f3f4f6" }} className="text-center mt-4 pt-6">
+          <p style={{ color: "#d1d5db" }} className="text-xs">Powered by FunilApp</p>
         </div>
       </div>
     </div>
