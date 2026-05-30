@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
+import SwRegister from "./sw-register";
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -39,12 +40,13 @@ export default function RootLayout({
     <html lang="pt">
       <head>
         <link rel="apple-touch-icon" href="/icon.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="FunilApp" />
       </head>
       <body className={`min-h-screen bg-white ${fontSans.variable}`}>
         <AuthProvider>{children}</AuthProvider>
+        <SwRegister />
       </body>
     </html>
   );
