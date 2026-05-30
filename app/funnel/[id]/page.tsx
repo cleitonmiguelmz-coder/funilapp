@@ -42,15 +42,16 @@ function getEmbedUrl(url: string): { type: "youtube" | "facebook" | "unknown"; e
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   );
   if (ytMatch) {
-    return { type: "youtube", embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}` };
+    return { type: "youtube", embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1` };
   }
 
   if (url.includes("youtube.com/embed/")) {
-    return { type: "youtube", embedUrl: url };
+    const baseUrl = url.split("?")[0];
+    return { type: "youtube", embedUrl: `${baseUrl}?autoplay=1&mute=1` };
   }
 
   if (url.includes("facebook.com") || url.includes("fb.watch")) {
-    const fbEmbed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=640`;
+    const fbEmbed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=640&autoplay=true`;
     return { type: "facebook", embedUrl: fbEmbed };
   }
 
@@ -91,26 +92,34 @@ export default function FunnelPage() {
       const data = snap.data() as Funnel;
       setFunnel(data);
 
-      // Regista a visita
-      await addDoc(collection(db, "visits"), {
-        funnelId,
-        userId: data.userId,
-        nomeProduto: data.nomeProduto,
-        createdAt: serverTimestamp(),
-      });
-
-      // Envia notificação push para o dono do funil
-      const userSnap = await getDoc(doc(db, "users", data.userId));
-      if (userSnap.exists() && userSnap.data().fcmToken) {
-        await fetch("/api/notify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: userSnap.data().fcmToken,
-            title: "👁️ Nova visita no teu funil!",
-            body: data.nomeProduto,
-          }),
+      // Regista a visita — não bloqueia se falhar
+      try {
+        await addDoc(collection(db, "visits"), {
+          funnelId,
+          userId: data.userId,
+          nomeProduto: data.nomeProduto,
+          createdAt: serverTimestamp(),
         });
+      } catch (e) {
+        console.error("Erro ao registar visita:", e);
+      }
+
+      // Notificação — não bloqueia se falhar
+      try {
+        const userSnap = await getDoc(doc(db, "users", data.userId));
+        if (userSnap.exists() && userSnap.data().fcmToken) {
+          await fetch("/api/notify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: userSnap.data().fcmToken,
+              title: "👁️ Nova visita no teu funil!",
+              body: data.nomeProduto,
+            }),
+          });
+        }
+      } catch (e) {
+        console.error("Erro ao enviar notificação:", e);
       }
 
     } catch (err) {
@@ -238,7 +247,7 @@ export default function FunnelPage() {
         {video && (
           <div className="rounded-2xl overflow-hidden mb-8 aspect-video bg-gray-900 shadow-sm">
             <iframe
-              src={`${video.embedUrl}?autoplay=1&mute=1`}
+              src={video.embedUrl}
               className="w-full h-full"
               allowFullScreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -353,7 +362,7 @@ export default function FunnelPage() {
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8 text-center">
             <h2 className="text-gray-900 font-bold text-lg mb-2">Pronto para comprar?</h2>
             <p className="text-gray-400 text-sm mb-6">Clica no botão abaixo para finalizar a tua compra</p>
-           <a    
+            <a    
               href={funnel.linkCompra}
               target="_blank"
               rel="noopener noreferrer"
