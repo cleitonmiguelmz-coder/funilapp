@@ -74,6 +74,20 @@ export default function DashboardPage() {
     }
   }, [unreadCount]);
 
+  const mostrarNotificacaoNativa = (title: string, body: string) => {
+    if (typeof window === "undefined") return;
+    if (Notification.permission !== "granted") return;
+    try {
+      new Notification(title, {
+        body,
+        icon: "/icon.png",
+        badge: "/icon.png",
+      });
+    } catch (err) {
+      console.error("Erro notificação nativa:", err);
+    }
+  };
+
   const subscribeToVisits = () => {
     const visitsQuery = query(
       collection(db, "visits"),
@@ -102,6 +116,7 @@ export default function DashboardPage() {
       const newest = data[0];
       if (newest) {
         showToast(newest);
+        mostrarNotificacaoNativa("👁️ Nova visita!", newest.nomeProduto);
       }
     });
 
@@ -133,18 +148,13 @@ export default function DashboardPage() {
     setNotifLoading(true);
     setNotifErro(null);
     try {
-      console.log("1. A iniciar...");
-
       if (!("Notification" in window)) {
         setNotifErro("O teu browser não suporta notificações.");
         setNotifLoading(false);
         return;
       }
 
-      console.log("2. Permissão actual:", Notification.permission);
-
       const permission = await Notification.requestPermission();
-      console.log("3. Permissão dada:", permission);
 
       if (permission !== "granted") {
         setNotifErro("Permissão negada. Vai às definições do browser e permite notificações para este site.");
@@ -152,16 +162,14 @@ export default function DashboardPage() {
         return;
       }
 
-      console.log("4. A carregar FCM...");
-      const { activarNotificacoes } = await import("@/lib/fcm");
-      const ok = await activarNotificacoes(user.uid);
-      console.log("5. Resultado:", ok);
+      setNotifActivadas(true);
 
-      if (!ok) {
-        setNotifErro("Não foi possível activar. O teu browser pode não suportar notificações push.");
-      }
+      // Testa a notificação imediatamente
+      new Notification("✅ FunilApp", {
+        body: "Notificações activadas! Vais receber alertas de visitas.",
+        icon: "/icon.png",
+      });
 
-      setNotifActivadas(ok);
     } catch (err) {
       console.error("Erro:", err);
       setNotifErro("Erro ao activar: " + String(err));

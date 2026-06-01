@@ -5,43 +5,29 @@ export const activarNotificacoes = async (userId: string): Promise<boolean> => {
   try {
     if (typeof window === "undefined") return false;
     if (!("Notification" in window)) return false;
-    if (!("serviceWorker" in navigator)) return false;
 
     const permission = await Notification.requestPermission();
     if (permission !== "granted") return false;
 
-    // Usa o SW já registado em vez de registar um novo
-    const registration = await navigator.serviceWorker.ready;
-    console.log("SW pronto:", registration);
-
-    const { getMessagingInstance } = await import("@/lib/firebase");
-    const { getToken } = await import("firebase/messaging");
-
-    const messaging = await getMessagingInstance();
-    if (!messaging) {
-      console.error("Messaging não suportado");
-      return false;
-    }
-
-    const token = await getToken(messaging, {
-      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: registration,
-    });
-
-    if (!token) {
-      console.error("Token FCM vazio");
-      return false;
-    }
-
-    console.log("Token FCM obtido:", token.substring(0, 20) + "...");
-
+    // Guarda no Firestore que este utilizador quer notificações
     await updateDoc(doc(db, "users", userId), {
-      fcmToken: token,
+      notificacoesActivas: true,
     });
 
     return true;
   } catch (err) {
-    console.error("Erro FCM:", err);
+    console.error("Erro:", err);
     return false;
   }
+};
+
+// Dispara notificação nativa do sistema
+export const mostrarNotificacao = (title: string, body: string) => {
+  if (typeof window === "undefined") return;
+  if (Notification.permission !== "granted") return;
+  new Notification(title, {
+    body,
+    icon: "/icon.png",
+    badge: "/icon.png",
+  });
 };
