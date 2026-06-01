@@ -42,17 +42,16 @@ function getEmbedUrl(url: string): { type: "youtube" | "facebook" | "unknown"; e
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   );
   if (ytMatch) {
-    // Sem autoplay — compatível com Safari/iPhone
-    return { type: "youtube", embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?playsinline=1&rel=0` };
+    return { type: "youtube", embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1` };
   }
 
   if (url.includes("youtube.com/embed/")) {
     const baseUrl = url.split("?")[0];
-    return { type: "youtube", embedUrl: `${baseUrl}?playsinline=1&rel=0` };
+    return { type: "youtube", embedUrl: `${baseUrl}?autoplay=1&mute=1` };
   }
 
   if (url.includes("facebook.com") || url.includes("fb.watch")) {
-    const fbEmbed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=640`;
+    const fbEmbed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=640&autoplay=true`;
     return { type: "facebook", embedUrl: fbEmbed };
   }
 
@@ -77,6 +76,7 @@ export default function FunnelPage() {
     intencao: "",
   });
 
+  // Força modo claro no mobile independente das preferências do sistema
   useEffect(() => {
     document.documentElement.style.colorScheme = "light";
     document.documentElement.setAttribute("data-theme", "light");
@@ -226,6 +226,7 @@ export default function FunnelPage() {
   return (
     <div style={{ colorScheme: "light", backgroundColor: "#f9fafb", color: "#111827" }} className="min-h-screen bg-gray-50">
 
+      {/* Header */}
       <div style={{ backgroundColor: "#ffffff", borderBottom: "1px solid #f3f4f6" }}>
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-green-600 flex items-center justify-center">
@@ -239,6 +240,7 @@ export default function FunnelPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-10">
 
+        {/* Hero */}
         <div className="text-center mb-8">
           <span style={{ backgroundColor: "#f0fdf4", color: "#15803d", border: "1px solid #dcfce7" }} className="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4">
             Oferta Especial
@@ -257,20 +259,20 @@ export default function FunnelPage() {
           </div>
         </div>
 
-        {/* Video — sem autoplay para compatibilidade iPhone */}
+        {/* Video */}
         {video && (
           <div className="rounded-2xl overflow-hidden mb-8 aspect-video shadow-sm" style={{ backgroundColor: "#111827" }}>
             <iframe
               src={video.embedUrl}
               className="w-full h-full"
               allowFullScreen
-              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               style={{ border: "none" }}
-              loading="lazy"
             />
           </div>
         )}
 
+        {/* Tipo: ebook / curso */}
         {(funnel.tipoProduto === "ebook" || funnel.tipoProduto === "curso") && (
           <div style={{ backgroundColor: "#eff6ff", border: "1px solid #dbeafe" }} className="rounded-2xl p-5 mb-6 space-y-3">
             {funnel.paraQuem && (
@@ -288,6 +290,7 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* Tipo: serviço */}
         {funnel.tipoProduto === "servico" && (
           <div style={{ backgroundColor: "#faf5ff", border: "1px solid #e9d5ff" }} className="rounded-2xl p-5 mb-6 space-y-3">
             {funnel.oQueInclui && (
@@ -307,6 +310,7 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* Tipo: dropshipping */}
         {funnel.tipoProduto === "dropshipping" && (
           <div style={{ backgroundColor: "#fff7ed", border: "1px solid #fed7aa" }} className="rounded-2xl p-5 mb-6 space-y-3">
             {funnel.oQueInclui && (
@@ -327,6 +331,7 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* Depoimentos */}
         {depoimentos.length > 0 && (
           <div className="mb-8">
             <h2 style={{ color: "#111827" }} className="font-bold text-xl text-center mb-2">O que dizem os nossos clientes</h2>
@@ -362,11 +367,12 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* CTA ou Formulário */}
         {temLinkCompra ? (
           <div style={{ backgroundColor: "#ffffff", border: "1px solid #f3f4f6" }} className="rounded-2xl p-6 shadow-sm mb-8 text-center">
             <h2 style={{ color: "#111827" }} className="font-bold text-lg mb-2">Pronto para comprar?</h2>
             <p style={{ color: "#9ca3af" }} className="text-sm mb-6">Clica no botão abaixo para finalizar a tua compra</p>
-             <a
+            <a
               href={funnel.linkCompra}
               target="_blank"
               rel="noopener noreferrer"
