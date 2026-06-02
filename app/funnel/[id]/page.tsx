@@ -48,6 +48,54 @@ const cores: Record<string, { primary: string; light: string; border: string; te
   black:  { primary: "#111827", light: "#f9fafb", border: "#e5e7eb", text: "#111827" },
 };
 
+const nomesFemininos = [
+  "ana","maria","fatima","rosa","lucia","joana","isabel","paula","sofia","rita",
+  "carla","sandra","patricia","claudia","fernanda","beatriz","alice","laura",
+  "helena","vera","ines","marta","sara","diana","catarina","filipa","margarida",
+  "celeste","graca","amelia","victoria","vanessa","tatiana","simone","renata",
+  "aisha","amina","zara","layla","nadia","yasmin","grace","mercy","blessing",
+  "chiamaka","ngozi","adaeze","chisom","precious","joy","faith","hope","esther",
+  "naomi","ruth","deborah","miriam","sarah","leila","farida","zanele","nomsa",
+  "thandiwe","lindiwe","nomvula","zodwa","nompumelelo","buhle","nandi"
+];
+
+const avataresFemininos = [
+  "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1625450331598-f7e5a8c5afe5?w=120&h=120&fit=crop&crop=face&auto=format",
+];
+
+const avataresMasculinos = [
+  "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1548372290-8d01b6c8e78c?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1583195764036-46f3c7f15b13?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=120&h=120&fit=crop&crop=face&auto=format",
+];
+
+function isFemininoNome(nome: string): boolean {
+  const primeiro = nome.split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return nomesFemininos.includes(primeiro);
+}
+
+function getAvatarUrl(nome: string, feminino: boolean): string {
+  const lista = feminino ? avataresFemininos : avataresMasculinos;
+  let hash = 0;
+  for (let i = 0; i < nome.length; i++) {
+    hash = nome.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % lista.length;
+  return lista[index];
+}
+
 function getEmbedUrl(url: string): string {
   if (!url) return "";
   const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -185,7 +233,7 @@ export default function FunnelPage() {
   return (
     <div style={{ colorScheme: "light", backgroundColor: "#f9fafb", color: "#111827" }} className="min-h-screen">
 
-      {/* Header com cor do layout */}
+      {/* Header */}
       <div style={{ backgroundColor: cor.primary }}>
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
@@ -197,7 +245,7 @@ export default function FunnelPage() {
         </div>
       </div>
 
-      {/* Hero banner com cor */}
+      {/* Hero */}
       <div style={{ backgroundColor: cor.primary }} className="pb-10">
         <div className="max-w-2xl mx-auto px-4 pt-8 text-center">
           <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-3 text-white">
@@ -247,9 +295,7 @@ export default function FunnelPage() {
         {/* Produto Físico / Dropshipping */}
         {isFisico && (funnel.oQueInclui || funnel.tempoEntrega) && (
           <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100">
-            <h3 style={{ color: cor.primary }} className="font-bold text-base mb-4">
-              📦 Detalhes do produto
-            </h3>
+            <h3 style={{ color: cor.primary }} className="font-bold text-base mb-4">📦 Detalhes do produto</h3>
             {funnel.oQueInclui && (
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.light }}>
@@ -367,29 +413,50 @@ export default function FunnelPage() {
           <div className="mb-6">
             <h2 className="font-bold text-lg text-gray-900 mb-4">O que dizem os clientes</h2>
             <div className="space-y-4">
-              {depoimentos.map((dep, index) => (
-                <div key={index} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                  <div className="flex gap-0.5 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={cor.primary}>
-                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-                      </svg>
-                    ))}
-                  </div>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">&ldquo;{dep.texto}&rdquo;</p>
-                  <div className="flex items-center gap-3">
-                    {dep.foto ? (
-                      <img src={dep.foto} alt={dep.nome} className="w-9 h-9 rounded-full object-cover border border-gray-100"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.primary }}>
-                        <span className="text-white text-sm font-bold uppercase">{dep.nome[0]}</span>
+              {depoimentos.map((dep, index) => {
+                const feminino = isFemininoNome(dep.nome);
+                const avatarUrl = dep.foto ? dep.foto : getAvatarUrl(dep.nome, feminino);
+                return (
+                  <div key={index} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-3 mb-3">
+                      <img
+                        src={avatarUrl}
+                        alt={dep.nome}
+                        className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2"
+                        style={{ borderColor: cor.primary + "33", backgroundColor: cor.light }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          const lista = feminino ? avataresFemininos : avataresMasculinos;
+                          const fallbackIndex = (index + 1) % lista.length;
+                          if (target.src !== lista[fallbackIndex]) {
+                            target.src = lista[fallbackIndex];
+                          }
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-gray-900 text-sm font-semibold truncate">{dep.nome}</p>
+                        <div className="flex gap-0.5 mt-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={cor.primary}>
+                              <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+                            </svg>
+                          ))}
+                        </div>
                       </div>
-                    )}
-                    <p className="text-gray-900 text-sm font-semibold">{dep.nome}</p>
+                      <div
+                        className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0"
+                        style={{ backgroundColor: cor.light, color: cor.text }}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20,6 9,17 4,12" />
+                        </svg>
+                        Verificado
+                      </div>
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed pl-15">&ldquo;{dep.texto}&rdquo;</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
