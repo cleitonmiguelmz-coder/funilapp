@@ -68,33 +68,33 @@ const nomesFemininos = [
 ];
 
 const avataresFemininos = [
-  "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1614644147724-2d4785d69962?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1614644147724-2d4785d69962?w=120&h=120&fit=crop&crop=face&auto=format", // Mulher negra sorrindo
   "https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1542596594-649edbc13630?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&h=120&fit=crop&crop=face&auto=format",
   "https://images.unsplash.com/photo-1586297135537-94bc9ba060aa?w=120&h=120&fit=crop&crop=face&auto=format",
   "https://images.unsplash.com/photo-1624561172888-ac93c696e10c?w=120&h=120&fit=crop&crop=face&auto=format",
   "https://images.unsplash.com/photo-1599842057874-37393e9342df?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1542596594-649edbc13630?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face&auto=format"
 ];
 
 const avataresMasculinos = [
-  "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1548372290-8d01b6c8e78c?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1583195764036-46f3c7f15b13?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1615813967515-2f6f0c3c7f0a?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1556155092-490a1ba16284?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1570295999919-56ceb5ecca5b?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1581383459083-8c7c9f5a5f3e?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1607345366928-199ea26cfe3e?w=120&h=120&fit=crop&crop=face&auto=format",
   "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1570158268183-d296b2892211?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1558203728-00f45181dd84?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1566492031773-4f998c0b3b2d?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1624561172888-ac93c696e10c?w=120&h=120&fit=crop&crop=face&auto=format", 
+  "https://images.unsplash.com/photo-1599839576882-9c4f3e0c7b3f?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&h=120&fit=crop&crop=face&auto=format"
 ];
 
 function isFemininoNome(nome: string): boolean {
