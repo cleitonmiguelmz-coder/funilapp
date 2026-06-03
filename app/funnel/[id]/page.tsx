@@ -53,10 +53,11 @@ const nomesFemininos = [
   "carla","sandra","patricia","claudia","fernanda","beatriz","alice","laura",
   "helena","vera","ines","marta","sara","diana","catarina","filipa","margarida",
   "celeste","graca","amelia","victoria","vanessa","tatiana","simone","renata",
+  "lurdes","conceicao","esperanca","dulce","felicia","edna","flavia","irene",
   "aisha","amina","zara","layla","nadia","yasmin","grace","mercy","blessing",
   "chiamaka","ngozi","adaeze","chisom","precious","joy","faith","hope","esther",
   "naomi","ruth","deborah","miriam","sarah","leila","farida","zanele","nomsa",
-  "thandiwe","lindiwe","nomvula","zodwa","nompumelelo","buhle","nandi"
+  "thandiwe","lindiwe","nomvula","zodwa","nompumelelo","buhle","nandi",
 ];
 
 const avataresFemininos = [
@@ -68,6 +69,10 @@ const avataresFemininos = [
   "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?w=120&h=120&fit=crop&crop=face&auto=format",
   "https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=120&h=120&fit=crop&crop=face&auto=format",
   "https://images.unsplash.com/photo-1625450331598-f7e5a8c5afe5?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1542596594-649edbc13630?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1614644147724-2d4785d69962?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=120&h=120&fit=crop&crop=face&auto=format",
 ];
 
 const avataresMasculinos = [
@@ -79,6 +84,10 @@ const avataresMasculinos = [
   "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&h=120&fit=crop&crop=face&auto=format",
   "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&h=120&fit=crop&crop=face&auto=format",
   "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1570158268183-d296b2892211?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1558203728-00f45181dd84?w=120&h=120&fit=crop&crop=face&auto=format",
+  "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&h=120&fit=crop&crop=face&auto=format",
 ];
 
 function isFemininoNome(nome: string): boolean {
@@ -86,14 +95,15 @@ function isFemininoNome(nome: string): boolean {
   return nomesFemininos.includes(primeiro);
 }
 
-function getAvatarUrl(nome: string, feminino: boolean): string {
+function getAvatarUrl(nome: string, feminino: boolean, depIndex: number): string {
   const lista = feminino ? avataresFemininos : avataresMasculinos;
   let hash = 0;
   for (let i = 0; i < nome.length; i++) {
     hash = nome.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const index = Math.abs(hash) % lista.length;
-  return lista[index];
+  const base = Math.abs(hash) % lista.length;
+  const final = (base + depIndex) % lista.length;
+  return lista[final];
 }
 
 function getEmbedUrl(url: string): string {
@@ -145,13 +155,11 @@ export default function FunnelPage() {
       if (!snap.exists()) { setNotFound(true); return; }
       const data = snap.data() as Funnel;
       setFunnel(data);
-
       try {
         await addDoc(collection(db, "visits"), {
           funnelId, userId: data.userId, nomeProduto: data.nomeProduto, createdAt: serverTimestamp(),
         });
       } catch (e) { console.error(e); }
-
       try {
         const userSnap = await getDoc(doc(db, "users", data.userId));
         if (userSnap.exists() && userSnap.data().fcmToken) {
@@ -162,7 +170,6 @@ export default function FunnelPage() {
           });
         }
       } catch (e) { console.error(e); }
-
     } catch (err) {
       console.error(err);
       setNotFound(true);
@@ -233,7 +240,6 @@ export default function FunnelPage() {
   return (
     <div style={{ colorScheme: "light", backgroundColor: "#f9fafb", color: "#111827" }} className="min-h-screen">
 
-      {/* Header */}
       <div style={{ backgroundColor: cor.primary }}>
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
@@ -245,12 +251,9 @@ export default function FunnelPage() {
         </div>
       </div>
 
-      {/* Hero */}
       <div style={{ backgroundColor: cor.primary }} className="pb-10">
         <div className="max-w-2xl mx-auto px-4 pt-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-3 text-white">
-            {funnel.nomeProduto}
-          </h1>
+          <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-3 text-white">{funnel.nomeProduto}</h1>
           {funnel.descricao && (
             <p className="text-base leading-relaxed mb-6 text-white/80">{funnel.descricao}</p>
           )}
@@ -265,43 +268,28 @@ export default function FunnelPage() {
 
       <div className="max-w-2xl mx-auto px-4 -mt-6 pb-12">
 
-        {/* Imagem do produto */}
         {funnel.imagemUrl && (
           <div className="rounded-2xl overflow-hidden mb-6 shadow-lg bg-white">
-            <img
-              src={funnel.imagemUrl}
-              alt={funnel.nomeProduto}
-              className="w-full object-cover"
-              style={{ maxHeight: "360px" }}
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-            />
+            <img src={funnel.imagemUrl} alt={funnel.nomeProduto} className="w-full object-cover" style={{ maxHeight: "360px" }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
           </div>
         )}
 
-        {/* Vídeo */}
         {embedUrl && (
           <div className="rounded-2xl overflow-hidden mb-6 shadow-lg aspect-video" style={{ backgroundColor: "#111827" }}>
-            <iframe
-              src={embedUrl}
-              className="w-full h-full"
-              allowFullScreen
+            <iframe src={embedUrl} className="w-full h-full" allowFullScreen
               allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              style={{ border: "none" }}
-              loading="lazy"
-            />
+              style={{ border: "none" }} loading="lazy" />
           </div>
         )}
 
-        {/* Produto Físico / Dropshipping */}
         {isFisico && (funnel.oQueInclui || funnel.tempoEntrega) && (
           <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100">
             <h3 style={{ color: cor.primary }} className="font-bold text-base mb-4">📦 Detalhes do produto</h3>
             {funnel.oQueInclui && (
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.light }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20,6 9,17 4,12" />
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">O que está incluído</p>
@@ -312,9 +300,7 @@ export default function FunnelPage() {
             {funnel.tempoEntrega && (
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.light }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" /><polyline points="12,6 12,12 16,14" />
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12,6 12,12 16,14" /></svg>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Tempo de entrega</p>
@@ -325,7 +311,6 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Ebook / Curso */}
         {(funnel.tipoProduto === "ebook" || funnel.tipoProduto === "curso") && (
           <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100">
             <h3 style={{ color: cor.primary }} className="font-bold text-base mb-4">
@@ -334,9 +319,7 @@ export default function FunnelPage() {
             {funnel.paraQuem && (
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.light }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Para quem é</p>
@@ -347,9 +330,7 @@ export default function FunnelPage() {
             {funnel.bonusIncluidos && (
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.light }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" /></svg>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Bónus incluídos</p>
@@ -360,16 +341,13 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Serviço */}
         {funnel.tipoProduto === "servico" && (
           <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100">
             <h3 style={{ color: cor.primary }} className="font-bold text-base mb-4">🛠️ Detalhes do Serviço</h3>
             {funnel.oQueInclui && (
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.light }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20,6 9,17 4,12" />
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">O que está incluído</p>
@@ -380,9 +358,7 @@ export default function FunnelPage() {
             {funnel.tempoEntrega && (
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.light }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" /><polyline points="12,6 12,12 16,14" />
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12,6 12,12 16,14" /></svg>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Prazo</p>
@@ -393,13 +369,10 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Garantia */}
         {funnel.garantia && (
           <div className="flex items-center gap-3 bg-white rounded-2xl p-4 mb-6 shadow-sm border border-gray-100">
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.light }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={cor.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
             </div>
             <div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Garantia</p>
@@ -415,7 +388,7 @@ export default function FunnelPage() {
             <div className="space-y-4">
               {depoimentos.map((dep, index) => {
                 const feminino = isFemininoNome(dep.nome);
-                const avatarUrl = dep.foto ? dep.foto : getAvatarUrl(dep.nome, feminino);
+                const avatarUrl = dep.foto ? dep.foto : getAvatarUrl(dep.nome, feminino, index);
                 return (
                   <div key={index} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                     <div className="flex items-center gap-3 mb-3">
@@ -427,7 +400,7 @@ export default function FunnelPage() {
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           const lista = feminino ? avataresFemininos : avataresMasculinos;
-                          const fallbackIndex = (index + 1) % lista.length;
+                          const fallbackIndex = (index + 2) % lista.length;
                           if (target.src !== lista[fallbackIndex]) {
                             target.src = lista[fallbackIndex];
                           }
@@ -461,7 +434,6 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* CTA ou Formulário */}
         {temLinkCompra ? (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6 text-center">
             <h2 className="font-bold text-lg text-gray-900 mb-2">Adquirir agora</h2>
