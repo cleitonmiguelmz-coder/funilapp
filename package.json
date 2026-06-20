@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-email/render": "^2.0.9",
     "clsx": "^2.1.1",
     "firebase": "^10.12.2",
     "firebase-admin": "^13.10.0",
