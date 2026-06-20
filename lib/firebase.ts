@@ -8,6 +8,7 @@ import {
   User,
 } from "firebase/auth";
 import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCfsEkOT9YsqZiXJCMaQw_6xhEiVoqUDog",
@@ -22,6 +23,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 // ── LOGIN com Google (único método disponível por agora) ────────────────────
 // Quando houver domínio próprio, adicionar de volta email/senha + código de 5 dígitos

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { getAfiliadoPorLink, getProduto } from '@/lib/marketplace';
 import { Produto } from '@/lib/types';
-import { PaginaVenda } from '@/app/market/produto/[id]/page';
+import { PaginaVenda } from '@/app/market/produto/[id]/PaginaVenda';
 import Link from 'next/link';
 
 export default function LinkAfiliado() {
