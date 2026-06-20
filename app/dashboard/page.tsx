@@ -6,7 +6,7 @@ import {
   collection, query, where, getDocs, deleteDoc, doc,
   onSnapshot, orderBy, limit, Timestamp
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -41,12 +41,12 @@ export default function DashboardPage() {
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authChecking, setAuthChecking] = useState(true);
   const [totalLeads, setTotalLeads] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Notificações
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [toasts, setToasts] = useState<Notification[]>([]);
@@ -55,8 +55,26 @@ export default function DashboardPage() {
   const [notifLoading, setNotifLoading] = useState(false);
   const [notifErro, setNotifErro] = useState<string | null>(null);
 
+  // ── Verificar se há utilizador autenticado ───────────────────────────────
+  // Com login apenas por Google, qualquer utilizador autenticado já está
+  // verificado automaticamente (Google confirma a posse do email).
   useEffect(() => {
-    if (!user) return;
+    const checkAuth = async () => {
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        router.replace("/login");
+        return;
+      }
+
+      setAuthChecking(false);
+    };
+
+    checkAuth();
+  }, [router]);
+
+  useEffect(() => {
+    if (!user || authChecking) return;
     fetchFunnels();
     subscribeToVisits();
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -64,7 +82,7 @@ export default function DashboardPage() {
         setNotifActivadas(true);
       }
     }
-  }, [user]);
+  }, [user, authChecking]);
 
   useEffect(() => {
     if (unreadCount > 0) {
@@ -78,11 +96,7 @@ export default function DashboardPage() {
     if (typeof window === "undefined") return;
     if (Notification.permission !== "granted") return;
     try {
-      new Notification(title, {
-        body,
-        icon: "/icon.png",
-        badge: "/icon.png",
-      });
+      new Notification(title, { body, icon: "/icon.png", badge: "/icon.png" });
     } catch (err) {
       console.error("Erro notificação nativa:", err);
     }
@@ -163,13 +177,10 @@ export default function DashboardPage() {
       }
 
       setNotifActivadas(true);
-
-      // Testa a notificação imediatamente
       new Notification("✅ FunilApp", {
         body: "Notificações activadas! Vais receber alertas de visitas.",
         icon: "/icon.png",
       });
-
     } catch (err) {
       console.error("Erro:", err);
       setNotifErro("Erro ao activar: " + String(err));
@@ -267,6 +278,14 @@ export default function DashboardPage() {
       setDeletingId(null);
     }
   };
+
+  if (authChecking) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-7 h-7 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
