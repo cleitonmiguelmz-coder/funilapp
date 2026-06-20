@@ -73,7 +73,7 @@ export default function PaginaProduto() {
 // ─────────────────────────────────────────────
 // COMPONENTE PRINCIPAL
 // ─────────────────────────────────────────────
-export function PaginaVenda({ produto, afiliadoRef, currentUser, directCheckout = false }: {
+function PaginaVenda({ produto, afiliadoRef, currentUser, directCheckout = false }: {
   produto: Produto;
   afiliadoRef: string | null;
   currentUser: User | null;
