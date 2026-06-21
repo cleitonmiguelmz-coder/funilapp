@@ -1,4 +1,6 @@
-// ===== FIRESTORE HELPERS — FUNIL MARKET =====
+
+// ===== lib/marketplace.ts — versão corrigida =====
+// Remove import do Resend/email — chama API Route em vez disso
 import {
   collection, doc, addDoc, getDoc, getDocs,
   updateDoc, setDoc, query, where, orderBy, serverTimestamp, increment
@@ -6,21 +8,28 @@ import {
 import { db } from './firebase';
 import { Produto, Venda, Afiliado, Cashout, calcularDivisao } from './types';
 import { gerarLinkDownload } from './download';
-import { enviarEmailVenda } from './email';
+
+// Função helper — chama a API Route no servidor
+async function enviarEmailNoServidor(tipo: string, data: Record<string, any>) {
+  try {
+    await fetch('/api/email/venda', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo, ...data }),
+    });
+  } catch (err) {
+    console.error('Falha ao enviar email:', err);
+    // Não bloqueia — venda continua mesmo se email falhar
+  }
+}
 
 // ---------- PRODUTOS ----------
 
 export async function criarProduto(data: Omit<Produto, 'id' | 'totalVendas' | 'totalReceita' | 'createdAt'>) {
   const limpo: Record<string, any> = {};
-  Object.entries(data).forEach(([k, v]) => {
-    limpo[k] = v === undefined ? null : v;
-  });
+  Object.entries(data).forEach(([k, v]) => { limpo[k] = v === undefined ? null : v; });
   const ref = await addDoc(collection(db, 'produtos'), {
-    ...limpo,
-    status: 'pendente',
-    totalVendas: 0,
-    totalReceita: 0,
-    createdAt: serverTimestamp(),
+    ...limpo, status: 'pendente', totalVendas: 0, totalReceita: 0, createdAt: serverTimestamp(),
   });
   return ref.id;
 }
@@ -32,21 +41,13 @@ export async function getProduto(id: string): Promise<Produto | null> {
 }
 
 export async function getProdutosActivos(): Promise<Produto[]> {
-  const q = query(
-    collection(db, 'produtos'),
-    where('status', '==', 'activo'),
-    orderBy('createdAt', 'desc')
-  );
+  const q = query(collection(db, 'produtos'), where('status', '==', 'activo'), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Produto));
 }
 
 export async function getProdutosDoCriador(userId: string): Promise<Produto[]> {
-  const q = query(
-    collection(db, 'produtos'),
-    where('userId', '==', userId),
-    orderBy('createdAt', 'desc')
-  );
+  const q = query(collection(db, 'produtos'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Produto));
 }
@@ -58,22 +59,11 @@ export async function activarProduto(produtoId: string) {
 // ---------- AFILIADOS ----------
 
 export async function tornarAfiliado(userId: string, produtoId: string): Promise<string> {
-  const q = query(
-    collection(db, 'afiliados'),
-    where('userId', '==', userId),
-    where('produtoId', '==', produtoId)
-  );
+  const q = query(collection(db, 'afiliados'), where('userId', '==', userId), where('produtoId', '==', produtoId));
   const snap = await getDocs(q);
   if (!snap.empty) return snap.docs[0].data().linkUnico;
   const linkUnico = Math.random().toString(36).substring(2, 9);
-  await addDoc(collection(db, 'afiliados'), {
-    userId,
-    produtoId,
-    linkUnico,
-    totalVendas: 0,
-    totalGanhos: 0,
-    createdAt: serverTimestamp(),
-  });
+  await addDoc(collection(db, 'afiliados'), { userId, produtoId, linkUnico, totalVendas: 0, totalGanhos: 0, createdAt: serverTimestamp() });
   return linkUnico;
 }
 
@@ -85,11 +75,7 @@ export async function getAfiliadoPorLink(linkUnico: string): Promise<Afiliado | 
 }
 
 export async function getAfiliadosDoUtilizador(userId: string): Promise<Afiliado[]> {
-  const q = query(
-    collection(db, 'afiliados'),
-    where('userId', '==', userId),
-    orderBy('totalGanhos', 'desc')
-  );
+  const q = query(collection(db, 'afiliados'), where('userId', '==', userId), orderBy('totalGanhos', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Afiliado));
 }
@@ -110,11 +96,7 @@ export async function processarVenda(data: {
 }): Promise<{ vendaId: string; linkDownload: string }> {
 
   const temAfiliado = !!(data.afiliadoId || data.afiliadoRef);
-  const { plataforma, afiliado, criador } = calcularDivisao(
-    data.valor,
-    data.percentagemAfiliado,
-    temAfiliado
-  );
+  const { plataforma, afiliado, criador } = calcularDivisao(data.valor, data.percentagemAfiliado, temAfiliado);
 
   // 1. Registar venda
   const vendaRef = await addDoc(collection(db, 'vendas'), {
@@ -134,26 +116,16 @@ export async function processarVenda(data: {
     createdAt: serverTimestamp(),
   });
 
-  // 2. Buscar produto para obter o caminho do ficheiro
+  // 2. Buscar produto
   const produtoSnap = await getDoc(doc(db, 'produtos', data.produtoId));
   const produto = produtoSnap.data();
+  if (!produto?.arquivoUrl) throw new Error('Produto sem ficheiro associado');
 
-  if (!produto?.arquivoUrl) {
-    throw new Error('Produto sem ficheiro associado');
-  }
+  // 3. Extrair path do Storage
+  const arquivoPath = decodeURIComponent(produto.arquivoUrl.split('/o/')[1]?.split('?')[0] ?? '');
 
-  // 3. Extrair path do Storage a partir da URL
-  const arquivoPath = decodeURIComponent(
-    produto.arquivoUrl.split('/o/')[1]?.split('?')[0] ?? ''
-  );
-
-  // 4. Gerar link seguro de download (48h, máx 3 usos)
-  const linkDownload = await gerarLinkDownload(
-    vendaRef.id,
-    data.produtoId,
-    data.compradorTelefone,
-    arquivoPath
-  );
+  // 4. Gerar link seguro
+  const linkDownload = await gerarLinkDownload(vendaRef.id, data.produtoId, data.compradorTelefone, arquivoPath);
 
   // 5. Actualizar métricas do produto
   await updateDoc(doc(db, 'produtos', data.produtoId), {
@@ -161,13 +133,9 @@ export async function processarVenda(data: {
     totalReceita: increment(data.valor),
   });
 
-  // 6. Actualizar métricas do afiliado
+  // 6. Actualizar afiliado
   if (data.afiliadoId) {
-    const q = query(
-      collection(db, 'afiliados'),
-      where('userId', '==', data.afiliadoId),
-      where('produtoId', '==', data.produtoId)
-    );
+    const q = query(collection(db, 'afiliados'), where('userId', '==', data.afiliadoId), where('produtoId', '==', data.produtoId));
     const snap = await getDocs(q);
     if (!snap.empty) {
       await updateDoc(doc(db, 'afiliados', snap.docs[0].id), {
@@ -177,17 +145,15 @@ export async function processarVenda(data: {
     }
   }
 
-  // 7. Guardar link na venda para referência
+  // 7. Guardar link na venda
   await updateDoc(vendaRef, { linkDownload });
 
-  // 8. ── NOVO: Buscar dados do criador e enviar email de notificação ──
-  // Feito em background — não bloqueia a resposta ao comprador
-  getDoc(doc(db, 'users', data.criadorId)).then(criadorSnap => {
-    if (!criadorSnap.exists()) return;
-    const criadorData = criadorSnap.data();
-    if (!criadorData?.email) return;
-
-    enviarEmailVenda({
+  // 8. ── Enviar email ao criador via API Route (servidor) ──
+  const criadorSnap = await getDoc(doc(db, 'users', data.criadorId));
+  if (criadorSnap.exists() && criadorSnap.data()?.email) {
+    const criadorData = criadorSnap.data()!;
+    // Não await — corre em background, não bloqueia
+    enviarEmailNoServidor('venda', {
       criadorEmail: criadorData.email,
       criadorNome: criadorData.nome || criadorData.email,
       produtoNome: produto.nome,
@@ -197,18 +163,14 @@ export async function processarVenda(data: {
       valorCriador: criador,
       metodoPagamento: data.metodoPagamento ?? 'mpesa',
       vendaId: vendaRef.id,
-    }).catch(err => console.error('Email de venda falhou:', err));
-  }).catch(err => console.error('Erro ao buscar criador:', err));
+    });
+  }
 
   return { vendaId: vendaRef.id, linkDownload };
 }
 
 export async function getVendasDoCriador(criadorId: string): Promise<Venda[]> {
-  const q = query(
-    collection(db, 'vendas'),
-    where('criadorId', '==', criadorId),
-    orderBy('createdAt', 'desc')
-  );
+  const q = query(collection(db, 'vendas'), where('criadorId', '==', criadorId), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Venda));
 }
@@ -216,37 +178,26 @@ export async function getVendasDoCriador(criadorId: string): Promise<Venda[]> {
 // ---------- CASHOUTS ----------
 
 export async function pedirCashout(data: Omit<Cashout, 'id' | 'status' | 'createdAt'>) {
-  const ref = await addDoc(collection(db, 'cashouts'), {
-    ...data,
-    status: 'pendente',
-    createdAt: serverTimestamp(),
-  });
+  const ref = await addDoc(collection(db, 'cashouts'), { ...data, status: 'pendente', createdAt: serverTimestamp() });
   return ref.id;
 }
 
 export async function getCashoutsDoUtilizador(userId: string): Promise<Cashout[]> {
-  const q = query(
-    collection(db, 'cashouts'),
-    where('userId', '==', userId),
-    orderBy('createdAt', 'desc')
-  );
+  const q = query(collection(db, 'cashouts'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Cashout));
 }
 
-// ---------- SALDO DISPONÍVEL ----------
+// ---------- SALDO ----------
 
 export async function calcularSaldoDisponivel(userId: string): Promise<number> {
   let total = 0;
-  const qCriador = query(collection(db, 'vendas'), where('criadorId', '==', userId), where('status', '==', 'pago'));
-  const snapCriador = await getDocs(qCriador);
-  snapCriador.forEach(d => { total += d.data().valorCriador; });
-  const qAfiliado = query(collection(db, 'vendas'), where('afiliadoId', '==', userId), where('status', '==', 'pago'));
-  const snapAfiliado = await getDocs(qAfiliado);
-  snapAfiliado.forEach(d => { total += d.data().valorAfiliado; });
+  const qC = query(collection(db, 'vendas'), where('criadorId', '==', userId), where('status', '==', 'pago'));
+  (await getDocs(qC)).forEach(d => { total += d.data().valorCriador; });
+  const qA = query(collection(db, 'vendas'), where('afiliadoId', '==', userId), where('status', '==', 'pago'));
+  (await getDocs(qA)).forEach(d => { total += d.data().valorAfiliado; });
   const qCash = query(collection(db, 'cashouts'), where('userId', '==', userId), where('status', '==', 'pago'));
-  const snapCash = await getDocs(qCash);
-  snapCash.forEach(d => { total -= d.data().valor; });
+  (await getDocs(qCash)).forEach(d => { total -= d.data().valor; });
   return Math.max(0, total);
 }
 
@@ -258,52 +209,27 @@ export async function getRelatorio(userId: string, diasAtras: number = 30) {
   const q = query(collection(db, 'vendas'), where('criadorId', '==', userId), where('status', '==', 'pago'), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
   const vendas = snap.docs.map(d => ({ id: d.id, ...d.data() } as Venda));
-  const vendasPeriodo = vendas.filter(v => {
-    const data = (v.createdAt as any)?.toDate?.() ?? new Date();
-    return data >= desde;
-  });
+  const vendasPeriodo = vendas.filter(v => ((v.createdAt as any)?.toDate?.() ?? new Date()) >= desde);
   const receita = vendasPeriodo.reduce((s, v) => s + v.valorCriador, 0);
-  const totalVendas = vendasPeriodo.length;
   const porDia: Record<string, number> = {};
-  vendasPeriodo.forEach(v => {
-    const data = (v.createdAt as any)?.toDate?.() ?? new Date();
-    const chave = data.toLocaleDateString('pt-MZ');
-    porDia[chave] = (porDia[chave] || 0) + 1;
-  });
+  vendasPeriodo.forEach(v => { const d = (v.createdAt as any)?.toDate?.()?.toLocaleDateString('pt-MZ') ?? '—'; porDia[d] = (porDia[d] || 0) + 1; });
   const porMetodo: Record<string, number> = { mpesa: 0, emola: 0 };
-  vendasPeriodo.forEach(v => {
-    const m = (v as any).metodoPagamento || 'mpesa';
-    porMetodo[m] = (porMetodo[m] || 0) + 1;
-  });
-  return { receita, totalVendas, porDia, porMetodo, vendasRecentes: vendasPeriodo.slice(0, 10) };
+  vendasPeriodo.forEach(v => { const m = (v as any).metodoPagamento || 'mpesa'; porMetodo[m] = (porMetodo[m] || 0) + 1; });
+  return { receita, totalVendas: vendasPeriodo.length, porDia, porMetodo, vendasRecentes: vendasPeriodo.slice(0, 10) };
 }
 
 // ---------- INTEGRAÇÕES ----------
 
-export async function getIntegracoes(userId: string): Promise<{
-  configs: Record<string, Record<string, string>>;
-  statuses: Record<string, 'activo' | 'inactivo'>;
-} | null> {
+export async function getIntegracoes(userId: string) {
   const snap = await getDoc(doc(db, 'integracoes', userId));
   if (!snap.exists()) return null;
-  return snap.data() as {
-    configs: Record<string, Record<string, string>>;
-    statuses: Record<string, 'activo' | 'inactivo'>;
-  };
+  return snap.data() as { configs: Record<string, Record<string, string>>; statuses: Record<string, 'activo' | 'inactivo'> };
 }
 
-export async function salvarIntegracao(userId: string, integracaoId: string, config: Record<string, string>): Promise<void> {
-  const ref = doc(db, 'integracoes', userId);
-  await setDoc(ref, {
-    [`configs.${integracaoId}`]: config,
-    [`statuses.${integracaoId}`]: 'activo',
-  }, { merge: true });
+export async function salvarIntegracao(userId: string, integracaoId: string, config: Record<string, string>) {
+  await setDoc(doc(db, 'integracoes', userId), { [`configs.${integracaoId}`]: config, [`statuses.${integracaoId}`]: 'activo' }, { merge: true });
 }
 
-export async function desactivarIntegracao(userId: string, integracaoId: string): Promise<void> {
-  const ref = doc(db, 'integracoes', userId);
-  await setDoc(ref, {
-    [`configs.${integracaoId}`]: null,
-    [`statuses.${integracaoId}`]: 'inactivo',
-  }, { merge: true });
+export async function desactivarIntegracao(userId: string, integracaoId: string) {
+  await setDoc(doc(db, 'integracoes', userId), { [`configs.${integracaoId}`]: null, [`statuses.${integracaoId}`]: 'inactivo' }, { merge: true });
 }
