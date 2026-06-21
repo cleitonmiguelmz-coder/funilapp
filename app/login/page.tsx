@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { useState, useEffect } from "react";
+import {
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult,
+} from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [checkingRedirect, setCheckingRedirect] = useState(true);
   const [error, setError] = useState("");
 
   const redirectAfterLogin = () => {
@@ -19,38 +24,64 @@ export default function LoginPage() {
     }
   };
 
+  // ── Ao carregar a página, verifica se voltámos de um redirect do Google ──
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          const user = result.user;
+
+          await setDoc(
+            doc(db, "users", user.uid),
+            {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+              emailVerificado: true,
+              createdAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
+
+          redirectAfterLogin();
+          return; // não esconder o loading — vamos navegar fora desta página
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "";
+        if (!msg.includes("popup-closed-by-user")) {
+          setError("Erro ao entrar com Google. Tente novamente.");
+        }
+      }
+      setCheckingRedirect(false);
+    };
+
+    checkRedirect();
+  }, []);
+
+  // ── Inicia o login — usa redirect (funciona em mobile e desktop) ────────
   const handleGoogle = async () => {
     setError("");
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      // Google já confirma a posse do email — não precisa de mais verificação
-      await setDoc(
-        doc(db, "users", user.uid),
-        {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          emailVerificado: true,
-          createdAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      redirectAfterLogin();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "";
-      if (!msg.includes("popup-closed-by-user") && !msg.includes("cancelled-popup-request")) {
-        setError("Erro ao entrar com Google. Tente novamente.");
-      }
-    } finally {
+      await signInWithRedirect(auth, provider);
+      // A página vai navegar para o Google — o resto acontece no useEffect acima
+    } catch {
+      setError("Erro ao entrar com Google. Tente novamente.");
       setLoading(false);
     }
   };
+
+  // ── Enquanto verifica se voltámos de um redirect, mostra loading simples ──
+  if (checkingRedirect) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-7 h-7 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
