@@ -3,11 +3,9 @@ import {
   getAuth,
   signOut,
   onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
   User,
 } from "firebase/auth";
-import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -24,29 +22,6 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-
-// ── LOGIN com Google (único método disponível por agora) ────────────────────
-// Quando houver domínio próprio, adicionar de volta email/senha + código de 5 dígitos
-export async function loginWithGoogle() {
-  const provider = new GoogleAuthProvider();
-  const res = await signInWithPopup(auth, provider);
-  const user = res.user;
-
-  await setDoc(
-    doc(db, "users", user.uid),
-    {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      emailVerificado: true, // Google já garante a posse do email
-      createdAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
-
-  return user;
-}
 
 // ── LOGOUT ───────────────────────────────────────────────────────────────────
 export async function logout() {

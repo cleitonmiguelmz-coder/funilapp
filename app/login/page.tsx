@@ -1,20 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   GoogleAuthProvider,
   signInWithRedirect,
   getRedirectResult,
+  onAuthStateChanged,
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [checkingRedirect, setCheckingRedirect] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState("");
+  const jaRedirecionou = useRef(false);
 
   const redirectAfterLogin = () => {
+    if (jaRedirecionou.current) return;
+    jaRedirecionou.current = true;
+
     const redirect = sessionStorage.getItem("redirectAfterLogin");
     if (redirect) {
       sessionStorage.removeItem("redirectAfterLogin");
@@ -24,58 +29,80 @@ export default function LoginPage() {
     }
   };
 
-  // ── Ao carregar a página, verifica se voltámos de um redirect do Google ──
+  const salvarUtilizador = async (user: {
+    uid: string;
+    email: string | null;
+    displayName: string | null;
+    photoURL: string | null;
+  }) => {
+    await setDoc(
+      doc(db, "users", user.uid),
+      {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        emailVerificado: true,
+        createdAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  };
+
   useEffect(() => {
+    let cancelado = false;
+
+    // ── 1. Tenta capturar o resultado explícito do redirect (mais rápido quando funciona) ──
     const checkRedirect = async () => {
       try {
         const result = await getRedirectResult(auth);
-        if (result?.user) {
-          const user = result.user;
-
-          await setDoc(
-            doc(db, "users", user.uid),
-            {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-              emailVerificado: true,
-              createdAt: serverTimestamp(),
-            },
-            { merge: true }
-          );
-
+        if (result?.user && !cancelado) {
+          await salvarUtilizador(result.user);
           redirectAfterLogin();
-          return; // não esconder o loading — vamos navegar fora desta página
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "";
-        if (!msg.includes("popup-closed-by-user")) {
+        if (!msg.includes("popup-closed-by-user") && !cancelado) {
           setError("Erro ao entrar com Google. Tente novamente.");
         }
       }
-      setCheckingRedirect(false);
     };
 
     checkRedirect();
+
+    // ── 2. Rede de segurança: onAuthStateChanged é o método mais fiável do Firebase ──
+    // Cobre o caso em que getRedirectResult() não captura a tempo, mas a sessão
+    // já foi restaurada internamente pelo SDK.
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (cancelado) return;
+
+      if (user) {
+        await salvarUtilizador(user);
+        redirectAfterLogin();
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+
+    return () => {
+      cancelado = true;
+      unsub();
+    };
   }, []);
 
-  // ── Inicia o login — usa redirect (funciona em mobile e desktop) ────────
   const handleGoogle = async () => {
     setError("");
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       await signInWithRedirect(auth, provider);
-      // A página vai navegar para o Google — o resto acontece no useEffect acima
     } catch {
       setError("Erro ao entrar com Google. Tente novamente.");
       setLoading(false);
     }
   };
 
-  // ── Enquanto verifica se voltámos de um redirect, mostra loading simples ──
-  if (checkingRedirect) {
+  if (checkingAuth) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="w-7 h-7 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
