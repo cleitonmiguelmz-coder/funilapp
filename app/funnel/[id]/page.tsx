@@ -8,7 +8,7 @@ import { useParams } from "next/navigation";
 interface Depoimento {
   nome: string;
   texto: string;
-  foto: string;
+  foto?: string;
 }
 
 interface Funnel {
@@ -48,69 +48,15 @@ const cores: Record<string, { primary: string; light: string; border: string; te
   black:  { primary: "#111827", light: "#f9fafb", border: "#e5e7eb", text: "#111827" },
 };
 
-const nomesFemininos = [
-  "ana","maria","fatima","rosa","lucia","joana","isabel","paula","sofia","rita",
-  "carla","sandra","patricia","claudia","fernanda","beatriz","alice","laura",
-  "helena","vera","ines","marta","sara","diana","catarina","filipa","margarida",
-  "celeste","graca","amelia","victoria","vanessa","tatiana","simone","renata",
-  "lurdes","conceicao","esperanca","dulce","felicia","edna","flavia","irene",
-  "aisha","amina","zara","layla","nadia","yasmin","grace","mercy","blessing",
-  "chiamaka","ngozi","adaeze","chisom","precious","joy","faith","hope","esther",
-  "naomi","ruth","deborah","miriam","sarah","leila","farida","zanele","nomsa",
-  "thandiwe","lindiwe","nomvula","zodwa","nompumelelo","buhle","nandi",
-  "jessica","jennifer","ashley","amanda","stephanie","melissa","nicole","lisa",
-  "michelle","kimberly","angela","tanya","keisha","latoya","shanice","tamara",
-  "crystal","destiny","diamond","ebony","jasmine","kenya","latasha","monique",
-  "nakisha","porsha","rochelle","shaniqua","tamika","tiffany","yolanda",
-  "celina","edite","esperanca","fatima","graca","hortensia","idilia","judite",
-  "lurdes","matilde","natercia","odete","palmira","queila","rosario","salome",
-  "teresinha","umbelina","virginia","wanda","xenia","yolanda","zenaida",
-];
-
-const avataresFemininos = [
-  "https://images.unsplash.com/photo-1614644147724-2d4785d69962?w=120&h=120&fit=crop&crop=face&auto=format", // Mulher negra sorrindo
-  "https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1586297135537-94bc9ba060aa?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1624561172888-ac93c696e10c?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1599842057874-37393e9342df?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1542596594-649edbc13630?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face&auto=format"
-];
-
-const avataresMasculinos = [
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1615813967515-2f6f0c3c7f0a?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1556155092-490a1ba16284?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1570295999919-56ceb5ecca5b?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1581383459083-8c7c9f5a5f3e?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1607345366928-199ea26cfe3e?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1566492031773-4f998c0b3b2d?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1624561172888-ac93c696e10c?w=120&h=120&fit=crop&crop=face&auto=format", 
-  "https://images.unsplash.com/photo-1599839576882-9c4f3e0c7b3f?w=120&h=120&fit=crop&crop=face&auto=format",
-  "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&h=120&fit=crop&crop=face&auto=format"
-];
-
-function isFemininoNome(nome: string): boolean {
-  const primeiro = nome.split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return nomesFemininos.includes(primeiro);
+function getInitials(nome: string): string {
+  const parts = nome.trim().split(" ").filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function getAvatarUrl(nome: string, feminino: boolean, depIndex: number): string {
-  const lista = feminino ? avataresFemininos : avataresMasculinos;
-  let hash = 0;
-  for (let i = 0; i < nome.length; i++) {
-    hash = nome.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const base = Math.abs(hash) % lista.length;
-  const final = (base + depIndex) % lista.length;
-  return lista[final];
+function getAvatarColor(nome: string, cor: { primary: string; light: string; text: string }) {
+  return { bg: cor.light, text: cor.text };
 }
 
 function getEmbedUrl(url: string): string {
@@ -157,26 +103,40 @@ export default function FunnelPage() {
   }, [funnelId]);
 
   const fetchFunnel = async () => {
+    // Validação do ID antes de ir ao Firestore
+    if (!funnelId || funnelId.trim() === "") {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+
     try {
-      const snap = await getDoc(doc(db, "funnels", funnelId));
+      const snap = await getDoc(doc(db, "funnels", funnelId.trim()));
       if (!snap.exists()) { setNotFound(true); return; }
+
       const data = snap.data() as Funnel;
-      setFunnel(data);
-      try {
-        await addDoc(collection(db, "visits"), {
+      setFunnel(data); // renderiza imediatamente
+
+      // Visita e notificação em paralelo — não bloqueiam a página
+      Promise.all([
+        addDoc(collection(db, "visits"), {
           funnelId, userId: data.userId, nomeProduto: data.nomeProduto, createdAt: serverTimestamp(),
-        });
-      } catch (e) { console.error(e); }
-      try {
-        const userSnap = await getDoc(doc(db, "users", data.userId));
-        if (userSnap.exists() && userSnap.data().fcmToken) {
-          await fetch("/api/notify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: userSnap.data().fcmToken, title: "👁️ Nova visita!", body: data.nomeProduto }),
-          });
-        }
-      } catch (e) { console.error(e); }
+        }).catch(console.error),
+
+        getDoc(doc(db, "users", data.userId)).then((userSnap) => {
+          if (userSnap.exists() && userSnap.data().fcmToken) {
+            return fetch("/api/notify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                token: userSnap.data().fcmToken,
+                title: "👁️ Nova visita!",
+                body: data.nomeProduto,
+              }),
+            });
+          }
+        }).catch(console.error),
+      ]);
     } catch (err) {
       console.error(err);
       setNotFound(true);
@@ -193,15 +153,20 @@ export default function FunnelPage() {
     e.preventDefault();
     if (!funnel || !form.nome || !form.whatsapp) return;
     setSubmitting(true);
+
+    const msg = encodeURIComponent(
+      `Olá! Me chamo *${form.nome}* e tenho interesse em *${funnel.nomeProduto}*.\n\nCidade: ${form.cidade}\nPagamento: ${form.pagamento}\nIntenção: ${form.intencao}`
+    );
+    const waUrl = `https://wa.me/258${funnel.whatsapp.replace(/\D/g, "")}?text=${msg}`;
+
+    // Redireciona ANTES do await — garante abertura no iOS/Android sem bloqueio de popup
+    window.location.href = waUrl;
+
     try {
       await addDoc(collection(db, "leads"), {
         ...form, funnelId, userId: funnel.userId, createdAt: serverTimestamp(),
       });
       setSubmitted(true);
-      const msg = encodeURIComponent(
-        `Olá! Me chamo *${form.nome}* e tenho interesse em *${funnel.nomeProduto}*.\n\nCidade: ${form.cidade}\nPagamento: ${form.pagamento}\nIntenção: ${form.intencao}`
-      );
-      window.open(`https://wa.me/258${funnel.whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
     } catch (err) {
       console.error(err);
     } finally {
@@ -233,7 +198,7 @@ export default function FunnelPage() {
           </svg>
         </div>
         <h1 className="text-gray-900 text-xl font-bold mb-2">Mensagem enviada!</h1>
-        <p className="text-gray-400 text-sm">Será redirecionado para o WhatsApp para continuar.</p>
+        <p className="text-gray-400 text-sm">A ser redirecionado para o WhatsApp...</p>
       </div>
     </div>
   );
@@ -247,6 +212,7 @@ export default function FunnelPage() {
   return (
     <div style={{ colorScheme: "light", backgroundColor: "#f9fafb", color: "#111827" }} className="min-h-screen">
 
+      {/* Header */}
       <div style={{ backgroundColor: cor.primary }}>
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
@@ -258,6 +224,7 @@ export default function FunnelPage() {
         </div>
       </div>
 
+      {/* Hero */}
       <div style={{ backgroundColor: cor.primary }} className="pb-10">
         <div className="max-w-2xl mx-auto px-4 pt-8 text-center">
           <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-3 text-white">{funnel.nomeProduto}</h1>
@@ -273,23 +240,37 @@ export default function FunnelPage() {
         </div>
       </div>
 
+      {/* Conteúdo */}
       <div className="max-w-2xl mx-auto px-4 -mt-6 pb-12">
 
+        {/* Imagem do produto (via Storage) */}
         {funnel.imagemUrl && (
           <div className="rounded-2xl overflow-hidden mb-6 shadow-lg bg-white">
-            <img src={funnel.imagemUrl} alt={funnel.nomeProduto} className="w-full object-cover" style={{ maxHeight: "360px" }}
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            <img
+              src={funnel.imagemUrl}
+              alt={funnel.nomeProduto}
+              className="w-full object-cover"
+              style={{ maxHeight: "360px" }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
           </div>
         )}
 
+        {/* Vídeo */}
         {embedUrl && (
           <div className="rounded-2xl overflow-hidden mb-6 shadow-lg aspect-video" style={{ backgroundColor: "#111827" }}>
-            <iframe src={embedUrl} className="w-full h-full" allowFullScreen
+            <iframe
+              src={embedUrl}
+              className="w-full h-full"
+              allowFullScreen
               allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              style={{ border: "none" }} loading="lazy" />
+              style={{ border: "none" }}
+              loading="lazy"
+            />
           </div>
         )}
 
+        {/* Produto físico / dropshipping */}
         {isFisico && (funnel.oQueInclui || funnel.tempoEntrega) && (
           <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100">
             <h3 style={{ color: cor.primary }} className="font-bold text-base mb-4">📦 Detalhes do produto</h3>
@@ -318,6 +299,7 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* Ebook / Curso */}
         {(funnel.tipoProduto === "ebook" || funnel.tipoProduto === "curso") && (
           <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100">
             <h3 style={{ color: cor.primary }} className="font-bold text-base mb-4">
@@ -348,6 +330,7 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* Serviço */}
         {funnel.tipoProduto === "servico" && (
           <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100">
             <h3 style={{ color: cor.primary }} className="font-bold text-base mb-4">🛠️ Detalhes do Serviço</h3>
@@ -376,6 +359,7 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* Garantia */}
         {funnel.garantia && (
           <div className="flex items-center gap-3 bg-white rounded-2xl p-4 mb-6 shadow-sm border border-gray-100">
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cor.light }}>
@@ -388,31 +372,42 @@ export default function FunnelPage() {
           </div>
         )}
 
-        {/* Depoimentos */}
+        {/* Depoimentos — usa foto do Storage se existir, senão mostra iniciais */}
         {depoimentos.length > 0 && (
           <div className="mb-6">
             <h2 className="font-bold text-lg text-gray-900 mb-4">O que dizem os clientes</h2>
             <div className="space-y-4">
               {depoimentos.map((dep, index) => {
-                const feminino = isFemininoNome(dep.nome);
-                const avatarUrl = dep.foto ? dep.foto : getAvatarUrl(dep.nome, feminino, index);
+                const avatarColors = getAvatarColor(dep.nome, cor);
                 return (
                   <div key={index} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                     <div className="flex items-center gap-3 mb-3">
-                      <img
-                        src={avatarUrl}
-                        alt={dep.nome}
-                        className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2"
-                        style={{ borderColor: cor.primary + "33", backgroundColor: cor.light }}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          const lista = feminino ? avataresFemininos : avataresMasculinos;
-                          const fallbackIndex = (index + 2) % lista.length;
-                          if (target.src !== lista[fallbackIndex]) {
-                            target.src = lista[fallbackIndex];
-                          }
+                      {dep.foto ? (
+                        <img
+                          src={dep.foto}
+                          alt={dep.nome}
+                          className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2"
+                          style={{ borderColor: cor.primary + "33" }}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const sibling = target.nextElementSibling as HTMLElement;
+                            if (sibling) sibling.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      {/* Fallback de iniciais — visível quando não há foto ou foto falha */}
+                      <div
+                        className="w-12 h-12 rounded-full flex-shrink-0 items-center justify-center text-sm font-bold"
+                        style={{
+                          backgroundColor: avatarColors.bg,
+                          color: avatarColors.text,
+                          display: dep.foto ? "none" : "flex",
+                          border: `2px solid ${cor.primary}33`,
                         }}
-                      />
+                      >
+                        {getInitials(dep.nome)}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-gray-900 text-sm font-semibold truncate">{dep.nome}</p>
                         <div className="flex gap-0.5 mt-0.5">
@@ -433,7 +428,7 @@ export default function FunnelPage() {
                         Verificado
                       </div>
                     </div>
-                    <p className="text-gray-600 text-sm leading-relaxed pl-15">&ldquo;{dep.texto}&rdquo;</p>
+                    <p className="text-gray-600 text-sm leading-relaxed">&ldquo;{dep.texto}&rdquo;</p>
                   </div>
                 );
               })}
@@ -441,13 +436,18 @@ export default function FunnelPage() {
           </div>
         )}
 
+        {/* CTA — link direto ou formulário */}
         {temLinkCompra ? (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6 text-center">
             <h2 className="font-bold text-lg text-gray-900 mb-2">Adquirir agora</h2>
             <p className="text-gray-400 text-sm mb-5">Clica no botão para finalizar a compra</p>
-            <a href={funnel.linkCompra} target="_blank" rel="noopener noreferrer"
+            <a
+              href={funnel.linkCompra}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 text-white font-semibold px-8 py-4 rounded-xl transition text-base w-full"
-              style={{ backgroundColor: cor.primary }}>
+              style={{ backgroundColor: cor.primary }}
+            >
               Comprar agora
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12,5 19,12 12,19" />
@@ -461,33 +461,41 @@ export default function FunnelPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome completo *</label>
-                <input type="text" name="nome" value={form.nome} onChange={handleChange} required placeholder="O seu nome"
+                <input
+                  type="text" name="nome" value={form.nome} onChange={handleChange} required placeholder="O seu nome"
                   style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#111827" }}
                   className="w-full rounded-lg px-4 py-3 text-sm placeholder:text-gray-400 focus:outline-none transition"
                   onFocus={(e) => e.target.style.borderColor = cor.primary}
-                  onBlur={(e) => e.target.style.borderColor = "#e5e7eb"} />
+                  onBlur={(e) => e.target.style.borderColor = "#e5e7eb"}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">WhatsApp *</label>
-                <input type="text" name="whatsapp" value={form.whatsapp} onChange={handleChange} required placeholder="84 000 0000"
+                <input
+                  type="text" name="whatsapp" value={form.whatsapp} onChange={handleChange} required placeholder="84 000 0000"
                   style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#111827" }}
                   className="w-full rounded-lg px-4 py-3 text-sm placeholder:text-gray-400 focus:outline-none transition"
                   onFocus={(e) => e.target.style.borderColor = cor.primary}
-                  onBlur={(e) => e.target.style.borderColor = "#e5e7eb"} />
+                  onBlur={(e) => e.target.style.borderColor = "#e5e7eb"}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Cidade</label>
-                <input type="text" name="cidade" value={form.cidade} onChange={handleChange} placeholder="Maputo"
+                <input
+                  type="text" name="cidade" value={form.cidade} onChange={handleChange} placeholder="Maputo"
                   style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#111827" }}
                   className="w-full rounded-lg px-4 py-3 text-sm placeholder:text-gray-400 focus:outline-none transition"
                   onFocus={(e) => e.target.style.borderColor = cor.primary}
-                  onBlur={(e) => e.target.style.borderColor = "#e5e7eb"} />
+                  onBlur={(e) => e.target.style.borderColor = "#e5e7eb"}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Forma de pagamento</label>
-                <select name="pagamento" value={form.pagamento} onChange={handleChange}
+                <select
+                  name="pagamento" value={form.pagamento} onChange={handleChange}
                   style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#374151" }}
-                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none transition">
+                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none transition"
+                >
                   <option value="">Selecione</option>
                   <option value="M-Pesa">M-Pesa</option>
                   <option value="E-Mola">E-Mola</option>
@@ -497,9 +505,11 @@ export default function FunnelPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Intenção de compra</label>
-                <select name="intencao" value={form.intencao} onChange={handleChange}
+                <select
+                  name="intencao" value={form.intencao} onChange={handleChange}
                   style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", color: "#374151" }}
-                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none transition">
+                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none transition"
+                >
                   <option value="">Selecione</option>
                   <option value="Comprar agora">Comprar agora</option>
                   <option value="Quero para amanhã">Quero para amanhã</option>
@@ -507,9 +517,12 @@ export default function FunnelPage() {
                   <option value="Estou a avaliar">Estou a avaliar</option>
                 </select>
               </div>
-              <button type="submit" disabled={submitting}
+              <button
+                type="submit"
+                disabled={submitting}
                 className="w-full text-white font-semibold py-3.5 rounded-lg transition flex items-center justify-center gap-2 mt-2"
-                style={{ backgroundColor: cor.primary, opacity: submitting ? 0.6 : 1 }}>
+                style={{ backgroundColor: cor.primary, opacity: submitting ? 0.6 : 1 }}
+              >
                 {submitting ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
