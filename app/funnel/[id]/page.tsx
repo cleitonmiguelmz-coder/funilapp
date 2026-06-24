@@ -118,25 +118,21 @@ export default function FunnelPage() {
       setFunnel(data); // renderiza imediatamente
 
       // Visita e notificação em paralelo — não bloqueiam a página
-      Promise.all([
-        addDoc(collection(db, "visits"), {
-          funnelId, userId: data.userId, nomeProduto: data.nomeProduto, createdAt: serverTimestamp(),
-        }).catch(console.error),
+     Promise.all([
+  addDoc(collection(db, "visits"), {
+    funnelId, userId: data.userId, nomeProduto: data.nomeProduto, createdAt: serverTimestamp(),
+  }).catch(console.error),
 
-        getDoc(doc(db, "users", data.userId)).then((userSnap) => {
-          if (userSnap.exists() && userSnap.data().fcmToken) {
-            return fetch("/api/notify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                token: userSnap.data().fcmToken,
-                title: "👁️ Nova visita!",
-                body: data.nomeProduto,
-              }),
-            });
-          }
-        }).catch(console.error),
-      ]);
+  fetch("/api/notify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId: data.userId,   // ← mudou: manda userId em vez do token
+      title: "👁️ Nova visita!",
+      body: data.nomeProduto,
+    }),
+  }).catch(console.error),
+]);
     } catch (err) {
       console.error(err);
       setNotFound(true);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
+import { getFirestore } from "firebase-admin/firestore";
 
 if (!getApps().length) {
   initializeApp({
@@ -14,19 +15,24 @@ if (!getApps().length) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { token, title, body } = await req.json();
+    const { userId, title, body } = await req.json();
 
-    console.log("=== NOTIFY API ===");
-    console.log("token:", token ? token.substring(0, 20) + "..." : "VAZIO");
-    console.log("title:", title);
-    console.log("body:", body);
-    console.log("FIREBASE_PROJECT_ID:", process.env.FIREBASE_PROJECT_ID);
-    console.log("FIREBASE_CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL ? "OK" : "VAZIO");
-    console.log("FIREBASE_PRIVATE_KEY:", process.env.FIREBASE_PRIVATE_KEY ? "OK" : "VAZIO");
-
-    if (!token || !title || !body) {
-      console.log("ERRO: Dados em falta");
+    if (!userId || !title || !body) {
       return NextResponse.json({ error: "Dados em falta" }, { status: 400 });
+    }
+
+    // Busca o fcmToken no servidor (admin SDK ignora as regras)
+    const db = getFirestore();
+    const userSnap = await db.doc(`users/${userId}`).get();
+
+    if (!userSnap.exists) {
+      return NextResponse.json({ error: "Utilizador não encontrado" }, { status: 404 });
+    }
+
+    const token = userSnap.data()?.fcmToken;
+
+    if (!token) {
+      return NextResponse.json({ ok: true, info: "Sem token FCM" });
     }
 
     await getMessaging().send({
@@ -42,7 +48,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("Notificação enviada com sucesso!");
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Erro ao enviar notificação:", err);
