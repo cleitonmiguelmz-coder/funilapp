@@ -37,7 +37,8 @@ interface ProdutoData {
   imagemUrl: string;
   categoria: string;
   percentagemAfiliado: number;
-  status: "pendente" | "activo" | "pausado";
+  status: "pendente" | "activo" | "pausado" | "rejeitado";
+  motivoRejeicao?: string;
   totalVendas: number;
   totalReceita: number;
   createdAt: { seconds: number } | null;
@@ -195,13 +196,19 @@ export default function AdminPage() {
   };
 
   const activarProduto = async (id: string) => {
-    await updateDoc(doc(db, "produtos", id), { status: "activo" });
-    setProdutos((prev) => prev.map((p) => p.id === id ? { ...p, status: "activo" } : p));
+    await updateDoc(doc(db, "produtos", id), { status: "activo", motivoRejeicao: null });
+    setProdutos((prev) => prev.map((p) => p.id === id ? { ...p, status: "activo", motivoRejeicao: undefined } : p));
   };
 
   const pausarProduto = async (id: string) => {
     await updateDoc(doc(db, "produtos", id), { status: "pausado" });
     setProdutos((prev) => prev.map((p) => p.id === id ? { ...p, status: "pausado" } : p));
+  };
+
+  // ── NOVO: rejeitar produto, com motivo opcional ──
+  const rejeitarProduto = async (id: string, motivo: string) => {
+    await updateDoc(doc(db, "produtos", id), { status: "rejeitado", motivoRejeicao: motivo || null });
+    setProdutos((prev) => prev.map((p) => p.id === id ? { ...p, status: "rejeitado", motivoRejeicao: motivo || undefined } : p));
   };
 
   const aprovarCashout = async (id: string) => {
@@ -568,7 +575,12 @@ export default function AdminPage() {
           ) : (
             <div className="divide-y divide-gray-50">
               {filteredProdutos.map((p) => {
-                const statusCor = { activo: "bg-green-50 text-green-700 border-green-100", pendente: "bg-amber-50 text-amber-700 border-amber-100", pausado: "bg-gray-50 text-gray-500 border-gray-200" }[p.status];
+                const statusCor = {
+                  activo: "bg-green-50 text-green-700 border-green-100",
+                  pendente: "bg-amber-50 text-amber-700 border-amber-100",
+                  pausado: "bg-gray-50 text-gray-500 border-gray-200",
+                  rejeitado: "bg-red-50 text-red-600 border-red-100",
+                }[p.status];
                 return (
                   <div key={p.id} className="px-6 py-4">
                     <div className="flex items-start justify-between gap-4">
@@ -585,6 +597,9 @@ export default function AdminPage() {
                             <span className="text-xs text-gray-400">{p.percentagemAfiliado}% afiliado</span>
                             <span className="text-xs text-gray-400">{p.totalVendas} vendas</span>
                           </div>
+                          {p.status === "rejeitado" && p.motivoRejeicao && (
+                            <p className="text-xs text-red-500 mt-1.5">Motivo da rejeição: {p.motivoRejeicao}</p>
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2 flex-shrink-0">
@@ -594,10 +609,19 @@ export default function AdminPage() {
                     </div>
                     <div className="flex gap-2 mt-3">
                       {p.status === "pendente" && (
-                        <button onClick={() => { if (confirm(`Aprovar "${p.nome}"?`)) activarProduto(p.id); }}
-                          className="flex-1 text-xs font-medium py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-100 transition">
-                          ✓ Aprovar produto
-                        </button>
+                        <>
+                          <button onClick={() => { if (confirm(`Aprovar "${p.nome}"?`)) activarProduto(p.id); }}
+                            className="flex-1 text-xs font-medium py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-100 transition">
+                            ✓ Aprovar produto
+                          </button>
+                          <button onClick={() => {
+                              const motivo = window.prompt(`Motivo da rejeição de "${p.nome}" (opcional — deixa em branco se não quiseres indicar):`);
+                              if (motivo !== null) rejeitarProduto(p.id, motivo.trim());
+                            }}
+                            className="flex-1 text-xs font-medium py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 transition">
+                            ✕ Rejeitar
+                          </button>
+                        </>
                       )}
                       {p.status === "activo" && (
                         <button onClick={() => { if (confirm(`Pausar "${p.nome}"?`)) pausarProduto(p.id); }}
@@ -609,6 +633,12 @@ export default function AdminPage() {
                         <button onClick={() => { if (confirm(`Reactivar "${p.nome}"?`)) activarProduto(p.id); }}
                           className="flex-1 text-xs font-medium py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-100 transition">
                           ✓ Reactivar
+                        </button>
+                      )}
+                      {p.status === "rejeitado" && (
+                        <button onClick={() => { if (confirm(`Reconsiderar e aprovar "${p.nome}"?`)) activarProduto(p.id); }}
+                          className="flex-1 text-xs font-medium py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-100 transition">
+                          ↺ Reconsiderar e aprovar
                         </button>
                       )}
                       <a href={`/market/produto/${p.id}`} target="_blank" rel="noopener noreferrer"

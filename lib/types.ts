@@ -20,7 +20,8 @@ export interface Produto {
   arquivoUrl: string;
   categoria: string;
   percentagemAfiliado: number;
-  status: 'pendente' | 'activo' | 'pausado';
+  status: 'pendente' | 'activo' | 'pausado' | 'rejeitado';
+  motivoRejeicao?: string;   // preenchido pelo admin quando rejeita o produto
   totalVendas: number;
   totalReceita: number;
   createdAt: any;

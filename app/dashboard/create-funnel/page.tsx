@@ -1,12 +1,12 @@
-
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useState, useRef, useEffect } from "react";
+import { collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs } from "firebase/firestore";
 import { db, storage } from "@/lib/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getLimiteFunis } from "@/lib/planLimits";
 
 interface Depoimento {
   nome: string;
@@ -157,6 +157,34 @@ export default function CreateFunnelPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // ── Limite de funis por plano ──
+  const [checandoLimite, setChecandoLimite] = useState(true);
+  const [limiteAtingido, setLimiteAtingido] = useState(false);
+  const [infoLimite, setInfoLimite] = useState({ atual: 0, limite: 1, plano: "free" });
+
+  useEffect(() => {
+    const verificarLimite = async () => {
+      if (!user) return;
+      try {
+        const userSnap = await getDoc(doc(db, "users", user.uid));
+        const plano = userSnap.data()?.plano || "free";
+        const limite = getLimiteFunis(plano);
+
+        const q = query(collection(db, "funnels"), where("userId", "==", user.uid));
+        const snapshot = await getDocs(q);
+        const atual = snapshot.size;
+
+        setInfoLimite({ atual, limite, plano });
+        setLimiteAtingido(atual >= limite);
+      } catch (err) {
+        console.error("Erro ao verificar limite de funis:", err);
+      } finally {
+        setChecandoLimite(false);
+      }
+    };
+    verificarLimite();
+  }, [user]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -239,6 +267,13 @@ export default function CreateFunnelPage() {
     e.preventDefault();
     setError("");
 
+    if (limiteAtingido) {
+      setError(
+        `Limite do plano ${infoLimite.plano === "free" ? "Free" : "Pro"} atingido (${infoLimite.atual}/${infoLimite.limite} funis).`
+      );
+      return;
+    }
+
     if (!tipoProduto) { setError("Seleciona o tipo de produto."); return; }
     if (!form.nomeProduto || !form.preco || !form.whatsapp) {
       setError("Preencha os campos obrigatórios.");
@@ -303,6 +338,35 @@ export default function CreateFunnelPage() {
 
   const inputClass =
     "w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition";
+
+  // ── Verificando limite ──
+  if (checandoLimite) {
+    return (
+      <div className="p-6 md:p-8 max-w-2xl mx-auto flex justify-center py-20">
+        <div className="w-6 h-6 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // ── Limite atingido ──
+  if (limiteAtingido) {
+    return (
+      <div className="p-6 md:p-8 max-w-2xl mx-auto text-center py-16">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Limite de funis atingido</h1>
+        <p className="text-gray-500 mb-6">
+          O plano {infoLimite.plano === "free" ? "Free" : "Pro"} permite até{" "}
+          {infoLimite.limite} funil{infoLimite.limite > 1 ? "is" : ""}. Você já tem{" "}
+          {infoLimite.atual}.
+        </p>
+        <button
+          onClick={() => router.push("/perfil?tab=pagamentos")}
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg transition"
+        >
+          Fazer upgrade para o Pro
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto">

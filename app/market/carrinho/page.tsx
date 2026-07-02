@@ -289,7 +289,7 @@ export default function CarrinhoPage() {
           {itens.length === 1 ? (
             // 1 produto — vai directo ao checkout
             <Link
-              href={`/market/produto/${itens[0].produtoId}/checkout`}
+             href={`/market/produto/${itens[0].produtoId}?checkout=1`}
               className="w-full bg-[#E24B4A] text-white py-4 rounded-2xl font-bold text-base hover:bg-[#A32D2D] transition flex items-center justify-center gap-2"
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -301,7 +301,7 @@ export default function CarrinhoPage() {
           ) : (
             // Vários produtos — checkout sequencial (vai produto a produto)
             <button
-              onClick={() => router.push(`/market/produto/${itens[0].produtoId}/checkout`)}
+              onClick={() => router.push(`/market/produto/${itens[0].produtoId}?checkout=1`)}
               className="w-full bg-[#E24B4A] text-white py-4 rounded-2xl font-bold text-base hover:bg-[#A32D2D] transition flex items-center justify-center gap-2"
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

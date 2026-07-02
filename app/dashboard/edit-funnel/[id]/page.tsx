@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db, storage } from "@/lib/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getLimiteFunis } from "@/lib/planLimits";
 
 interface Depoimento {
   nome: string;
@@ -159,6 +160,9 @@ export default function EditFunnelPage() {
   const [error, setError]       = useState("");
   const [success, setSuccess]   = useState(false);
 
+  // ── Info do plano (apenas informativo — editar não cria funil novo, então não bloqueia) ──
+  const [infoPlano, setInfoPlano] = useState<{ plano: string; limite: number } | null>(null);
+
   const fetchFunnel = useCallback(async () => {
     if (!user || !id) return;
     try {
@@ -203,11 +207,24 @@ export default function EditFunnelPage() {
     }
   }, [user, id, router]);
 
+  // Busca o plano do usuário apenas para exibir (não bloqueia a edição)
+  const fetchPlano = useCallback(async () => {
+    if (!user) return;
+    try {
+      const userSnap = await getDoc(doc(db, "users", user.uid));
+      const plano = userSnap.data()?.plano || "free";
+      setInfoPlano({ plano, limite: getLimiteFunis(plano) });
+    } catch (err) {
+      console.error("Erro ao buscar plano:", err);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     fetchFunnel();
-  }, [authLoading, user, fetchFunnel, router]);
+    fetchPlano();
+  }, [authLoading, user, fetchFunnel, fetchPlano, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -355,6 +372,12 @@ export default function EditFunnelPage() {
         </button>
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Editar Funil</h1>
         <p className="text-gray-400 text-sm mt-1">Atualize as informações do seu funil</p>
+        {infoPlano && (
+          <p className="text-xs text-gray-400 mt-2">
+            Plano atual: <span className="font-medium text-gray-600">{infoPlano.plano === "free" ? "Free" : "Pro"}</span>
+            {" "}· limite de {infoPlano.limite} funil{infoPlano.limite > 1 ? "is" : ""}
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

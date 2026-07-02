@@ -292,44 +292,70 @@ function ProdutoRow({ produto, currentUser }: { produto: Produto; currentUser: U
     activo: 'bg-green-100 text-green-700',
     pendente: 'bg-yellow-100 text-yellow-700',
     pausado: 'bg-gray-100 text-gray-500',
+    rejeitado: 'bg-red-100 text-red-700',
   }[produto.status] ?? 'bg-gray-100 text-gray-500';
 
+  // Campo opcional — preenchido pelo admin quando rejeita o produto.
+  // Garante que 'motivoRejeicao' e o status 'rejeitado' existem no tipo Produto em lib/types.ts
+  const motivoRejeicao = (produto as any).motivoRejeicao as string | undefined;
+
   return (
-    <div className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition">
-      <div className="w-10 h-10 rounded-xl bg-[#FCEBEB] overflow-hidden flex-shrink-0 flex items-center justify-center">
-        {produto.imagemUrl ? (
-          <Image src={produto.imagemUrl} alt={produto.nome} width={40} height={40} className="object-cover" />
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="1.5">
-            <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+    <div>
+      <div className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition">
+        <div className="w-10 h-10 rounded-xl bg-[#FCEBEB] overflow-hidden flex-shrink-0 flex items-center justify-center">
+          {produto.imagemUrl ? (
+            <Image src={produto.imagemUrl} alt={produto.nome} width={40} height={40} className="object-cover" />
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="1.5">
+              <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+            </svg>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-[#111827] text-sm truncate">{produto.nome}</p>
+          <p className="text-xs text-gray-400">{produto.categoria} · {produto.percentagemAfiliado}% afiliado</p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="font-semibold text-[#111827] text-sm">{produto.preco.toLocaleString('pt-MZ')} MT</p>
+          <p className="text-xs text-gray-400">{produto.totalVendas} vendas</p>
+        </div>
+        <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${statusCor}`}>
+          {produto.status}
+        </span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link
+            href={`/market/produto/${produto.id}`}
+            className="text-xs text-gray-400 hover:text-gray-600 flex-shrink-0"
+            target="_blank"
+          >
+            Ver →
+          </Link>
+          <BotaoPromover
+            produto={produto}
+            currentUser={currentUser}
+            produtoId={produto.id!}
+          />
+        </div>
+      </div>
+
+      {/* AVISO — só aparece quando o produto foi rejeitado pelo admin */}
+      {produto.status === 'rejeitado' && (
+        <div className="mx-5 mb-3 -mt-1 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 flex items-start gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" className="flex-shrink-0 mt-0.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-[#111827] text-sm truncate">{produto.nome}</p>
-        <p className="text-xs text-gray-400">{produto.categoria} · {produto.percentagemAfiliado}% afiliado</p>
-      </div>
-      <div className="text-right flex-shrink-0">
-        <p className="font-semibold text-[#111827] text-sm">{produto.preco.toLocaleString('pt-MZ')} MT</p>
-        <p className="text-xs text-gray-400">{produto.totalVendas} vendas</p>
-      </div>
-      <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${statusCor}`}>
-        {produto.status}
-      </span>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <Link
-          href={`/market/produto/${produto.id}`}
-          className="text-xs text-gray-400 hover:text-gray-600 flex-shrink-0"
-          target="_blank"
-        >
-          Ver →
-        </Link>
-        <BotaoPromover
-          produto={produto}
-          currentUser={currentUser}
-          produtoId={produto.id!}
-        />
-      </div>
+          <div>
+            <p className="text-xs font-semibold text-red-600">Produto rejeitado</p>
+            <p className="text-xs text-red-500 mt-0.5">
+              {motivoRejeicao
+                ? motivoRejeicao
+                : 'O admin não indicou um motivo. Edita o produto e submete novamente, ou contacta o suporte.'}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
