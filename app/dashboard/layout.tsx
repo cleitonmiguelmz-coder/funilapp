@@ -5,6 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const ADMIN_EMAIL = "appmarketmz@gmail.com";
 
@@ -19,6 +21,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ── Plano do usuário em tempo real ──
+  const [plano, setPlano] = useState<string>("free");
+
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = onSnapshot(doc(db, "users", user.uid), (snap) => {
+      const dados = snap.data();
+      setPlano(dados?.plano || "free");
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   const navItems: NavItem[] = [
     {
@@ -252,7 +266,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-gray-800 text-xs font-semibold truncate">{user.email}</p>
-              <p className="text-gray-400 text-xs">Plano Gratuito</p>
+              <p className="text-gray-400 text-xs">
+                {plano === "pro" ? "Plano Pro" : "Plano Gratuito"}
+              </p>
             </div>
           </div>
           <button

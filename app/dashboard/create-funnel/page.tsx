@@ -360,7 +360,7 @@ export default function CreateFunnelPage() {
           {infoLimite.atual}.
         </p>
         <button
-          onClick={() => router.push("/perfil?tab=pagamentos")}
+          onClick={() => router.push("/dashboard/profile")}
           className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg transition"
         >
           Fazer upgrade para o Pro
