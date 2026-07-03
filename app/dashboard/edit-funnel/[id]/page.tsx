@@ -212,7 +212,7 @@ export default function EditFunnelPage() {
     if (!user) return;
     try {
       const userSnap = await getDoc(doc(db, "users", user.uid));
-      const plano = userSnap.data()?.plano || "free";
+      const plano = (userSnap.data()?.plano || "free").toLowerCase();
       setInfoPlano({ plano, limite: getLimiteFunis(plano) });
     } catch (err) {
       console.error("Erro ao buscar plano:", err);

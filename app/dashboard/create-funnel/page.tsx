@@ -167,7 +167,7 @@ export default function CreateFunnelPage() {
       if (!user) return;
       try {
         const userSnap = await getDoc(doc(db, "users", user.uid));
-        const plano = userSnap.data()?.plano || "free";
+        const plano = (userSnap.data()?.plano || "free").toLowerCase();
         const limite = getLimiteFunis(plano);
 
         const q = query(collection(db, "funnels"), where("userId", "==", user.uid));

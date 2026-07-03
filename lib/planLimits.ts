@@ -9,5 +9,6 @@ export const LIMITES_PLANO = {
 export type PlanoTipo = keyof typeof LIMITES_PLANO;
 
 export function getLimiteFunis(plano: string): number {
-  return LIMITES_PLANO[plano as PlanoTipo] ?? LIMITES_PLANO.free;
+  const chave = (plano || "free").toLowerCase() as PlanoTipo;
+  return LIMITES_PLANO[chave] ?? LIMITES_PLANO.free;
 }

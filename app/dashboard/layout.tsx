@@ -29,7 +29,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!user) return;
     const unsubscribe = onSnapshot(doc(db, "users", user.uid), (snap) => {
       const dados = snap.data();
-      setPlano(dados?.plano || "free");
+      const planoNormalizado = (dados?.plano || "free").toLowerCase();
+      setPlano(planoNormalizado);
     });
     return () => unsubscribe();
   }, [user]);
