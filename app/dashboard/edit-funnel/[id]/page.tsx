@@ -375,7 +375,7 @@ export default function EditFunnelPage() {
         {infoPlano && (
           <p className="text-xs text-gray-400 mt-2">
             Plano atual: <span className="font-medium text-gray-600">{infoPlano.plano === "free" ? "Free" : "Pro"}</span>
-            {" "}· limite de {infoPlano.limite} funil{infoPlano.limite > 1 ? "is" : ""}
+            {" "}· {infoPlano.limite === Infinity ? "funis ilimitados" : `limite de ${infoPlano.limite} funil${infoPlano.limite > 1 ? "is" : ""}`}
           </p>
         )}
       </div>

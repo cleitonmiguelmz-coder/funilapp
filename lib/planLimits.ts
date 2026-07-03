@@ -1,8 +1,9 @@
 // lib/planLimits.ts
 
+// Estes valores devem ser SEMPRE iguais aos anunciados na página de Planos (/dashboard/profile)
 export const LIMITES_PLANO = {
-  free: 1,
-  pro: 10, // ajusta esse número conforme fizer sentido pro teu negócio
+  free: 3,
+  pro: Infinity, // Pro = funis ilimitados
 } as const;
 
 export type PlanoTipo = keyof typeof LIMITES_PLANO;

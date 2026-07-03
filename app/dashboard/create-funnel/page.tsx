@@ -268,8 +268,9 @@ export default function CreateFunnelPage() {
     setError("");
 
     if (limiteAtingido) {
+      const limiteTexto = infoLimite.limite === Infinity ? "ilimitado" : infoLimite.limite;
       setError(
-        `Limite do plano ${infoLimite.plano === "free" ? "Free" : "Pro"} atingido (${infoLimite.atual}/${infoLimite.limite} funis).`
+        `Limite do plano ${infoLimite.plano === "free" ? "Free" : "Pro"} atingido (${infoLimite.atual}/${limiteTexto} funis).`
       );
       return;
     }
@@ -350,12 +351,12 @@ export default function CreateFunnelPage() {
 
   // ── Limite atingido ──
   if (limiteAtingido) {
+    const limiteTexto = infoLimite.limite === Infinity ? "ilimitados" : `até ${infoLimite.limite} funil${infoLimite.limite > 1 ? "is" : ""}`;
     return (
       <div className="p-6 md:p-8 max-w-2xl mx-auto text-center py-16">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Limite de funis atingido</h1>
         <p className="text-gray-500 mb-6">
-          O plano {infoLimite.plano === "free" ? "Free" : "Pro"} permite até{" "}
-          {infoLimite.limite} funil{infoLimite.limite > 1 ? "is" : ""}. Você já tem{" "}
+          O plano {infoLimite.plano === "free" ? "Free" : "Pro"} permite {limiteTexto}. Você já tem{" "}
           {infoLimite.atual}.
         </p>
         <button
