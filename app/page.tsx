@@ -7,13 +7,26 @@ import Link from "next/link";
 import Image from "next/image";
 
 /* ─────────────────────────────────────────────
-   TOKENS DE IDENTIDADE
-   Verde:    #0F6B3C
-   Vermelho: #B4222F
-   Dourado:  #C99A2E
-   Tinta:    #141414
-   Off-white:#FCFBF7
+   IDENTIDADE — FunilApp
+   Verde:      #0C6B3A
+   Vermelho:   #C21A2C
+   Tinta:      #101010
+   Branco:     #FFFFFF
+   Cinza fundo:#F4F3EF
+   Cinza texto:#5C5B57
 ───────────────────────────────────────────── */
+
+const COR = {
+  verde: "#0C6B3A",
+  vermelho: "#C21A2C",
+  tinta: "#101010",
+  branco: "#FFFFFF",
+  fundo: "#F4F3EF",
+  texto: "#5C5B57",
+};
+
+const FONT_TITULO =
+  "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif";
 
 const PRODUTOS_DESTAQUE = [
   { nome: "Domina o Tráfego Pago", categoria: "Curso", preco: 1200, vendas: 87, imagem: "/produtos/trafego-pago.jpg" },
@@ -25,21 +38,19 @@ const PRODUTOS_DESTAQUE = [
 
 const PRODUTO_MAIS_VENDIDO = Math.max(...PRODUTOS_DESTAQUE.map((p) => p.vendas));
 
-// Categorias agora partilham o mesmo cartão neutro — só o rótulo muda de cor,
-// alternando entre as 3 cores da marca. Sem paleta pastel por categoria.
 const CATEGORIAS_MARKET = [
-  { nome: "Ebooks", desc: "Conhecimento em PDF", cor: "#B4222F" },
-  { nome: "Cursos", desc: "Vídeo aulas completas", cor: "#0F6B3C" },
-  { nome: "Templates", desc: "Prontos para usar", cor: "#C99A2E" },
-  { nome: "Software", desc: "Ferramentas digitais", cor: "#B4222F" },
-  { nome: "Outros", desc: "Mais categorias", cor: "#0F6B3C" },
+  { nome: "Ebooks", desc: "Conhecimento em PDF", cor: COR.vermelho },
+  { nome: "Cursos", desc: "Vídeo aulas completas", cor: COR.verde },
+  { nome: "Templates", desc: "Prontos para usar", cor: COR.vermelho },
+  { nome: "Software", desc: "Ferramentas digitais", cor: COR.verde },
+  { nome: "Outros", desc: "Mais categorias", cor: COR.vermelho },
 ];
 
-const METAS_VENDEDOR = [
-  { meta: "5K", label: "Primeira meta", desc: "Quando fechas as primeiras vendas a sério", cor: "#0F6B3C" },
-  { meta: "10K", label: "Vendedor consistente", desc: "Já não é sorte, é ritmo", cor: "#0F6B3C" },
-  { meta: "50K", label: "Referência no nicho", desc: "Outros vendedores começam a perguntar como fizeste", cor: "#B4222F" },
-  { meta: "100K", label: "Topo da plataforma", desc: "Lugar reservado para quem manda no jogo", cor: "#C99A2E" },
+const SELOS_METAS = [
+  { meta: "5K", src: "/selos/5k.png" },
+  { meta: "10K", src: "/selos/10k.png" },
+  { meta: "50K", src: "/selos/50k.png" },
+  { meta: "100K", src: "/selos/100k.png" },
 ];
 
 const PASSOS_COMO_FUNCIONA = [
@@ -79,13 +90,39 @@ const PASSOS_COMO_FUNCIONA = [
   },
 ];
 
-// Faixa fina vermelho / branco / verde — o único elemento repetido no fim e no início da página
 function FaixaIdentidade() {
   return (
-    <div className="flex h-[3px] w-full">
-      <div className="flex-1" style={{ background: "#B4222F" }} />
-      <div className="flex-1 border-y border-black/5" style={{ background: "#FCFBF7" }} />
-      <div className="flex-1" style={{ background: "#0F6B3C" }} />
+    <div className="flex h-1 w-full">
+      <div className="flex-1" style={{ background: COR.vermelho }} />
+      <div className="flex-1" style={{ background: COR.tinta }} />
+      <div className="flex-1" style={{ background: COR.verde }} />
+    </div>
+  );
+}
+
+// Moldura de produto — etiqueta de módulo + imagem, sem barra de "browser" genérica.
+function ScreenshotFrame({
+  src,
+  alt,
+  label,
+  accentColor,
+}: {
+  src: string;
+  alt: string;
+  label: string;
+  accentColor: string;
+}) {
+  return (
+    <div className="relative rounded-lg overflow-hidden shadow-xl" style={{ border: `1px solid ${COR.tinta}14` }}>
+      <div className="relative w-full" style={{ aspectRatio: "4 / 3", background: COR.fundo }}>
+        <Image src={src} alt={alt} fill className="object-contain" sizes="(max-width: 768px) 100vw, 50vw" />
+      </div>
+      <span
+        className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white px-2.5 py-1"
+        style={{ background: accentColor }}
+      >
+        {label}
+      </span>
     </div>
   );
 }
@@ -96,6 +133,7 @@ export default function HomePage() {
   const scrollProdutosRef = useRef<HTMLDivElement>(null);
   const scrollCategoriasRef = useRef<HTMLDivElement>(null);
   const scrollPassosRef = useRef<HTMLDivElement>(null);
+  const scrollSelosRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!loading && user) {
@@ -125,8 +163,8 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#FCFBF7" }}>
-        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: "#0F6B3C", borderTopColor: "transparent" }} />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: COR.branco }}>
+        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: COR.verde, borderTopColor: "transparent" }} />
       </div>
     );
   }
@@ -134,24 +172,33 @@ export default function HomePage() {
   if (user) return null;
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#FCFBF7", color: "#141414" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: COR.branco, color: COR.tinta, fontFamily: FONT_TITULO }}>
       <FaixaIdentidade />
 
       {/* Navbar */}
-      <header className="border-b border-black/[0.06] sticky top-0 backdrop-blur-sm z-10" style={{ background: "#FCFBF7EE" }}>
+      <header className="sticky top-0 z-10 backdrop-blur-sm" style={{ background: `${COR.branco}F2`, borderBottom: `1px solid ${COR.tinta}12` }}>
         <div className="max-w-6xl mx-auto px-5 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="FunilApp" width={32} height={32} className="rounded-lg w-7 h-7 sm:w-8 sm:h-8" />
-            <span className="font-bold text-base sm:text-lg tracking-tight">FunilApp</span>
+            <Image src="/logo.png" alt="FunilApp" width={32} height={32} className="w-7 h-7 sm:w-8 sm:h-8" />
+            <span className="font-black text-base sm:text-lg tracking-tight uppercase">FunilApp</span>
           </div>
-          <div className="flex items-center gap-3 sm:gap-4">
-            <Link href="/login" className="text-xs sm:text-sm font-medium opacity-60 hover:opacity-100 transition">
+          <div className="flex items-center gap-3 sm:gap-5">
+            <a
+              href="https://chat.whatsapp.com/CuEv920VDerLNH4uMBSUz7?mode=gi_t"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline text-xs sm:text-sm font-semibold"
+              style={{ color: COR.texto }}
+            >
+              Comunidade
+            </a>
+            <Link href="/login" className="text-xs sm:text-sm font-semibold" style={{ color: COR.texto }}>
               Entrar
             </Link>
             <Link
               href="/login"
-              className="text-xs sm:text-sm font-semibold text-white px-3.5 sm:px-4 py-2 rounded-lg transition whitespace-nowrap hover:brightness-110"
-              style={{ background: "#0F6B3C" }}
+              className="text-xs sm:text-sm font-bold text-white px-4 sm:px-5 py-2.5 transition whitespace-nowrap"
+              style={{ background: COR.verde }}
             >
               Começar grátis
             </Link>
@@ -161,32 +208,29 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="max-w-4xl mx-auto px-5 sm:px-6 pt-14 sm:pt-20 pb-14 sm:pb-20 text-center">
-        {/* "Selo" no lugar do badge com bolinha pulsante */}
         <div
-          className="inline-flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 mb-7 rounded-full border-[3px] font-mono text-[9px] sm:text-[10px] font-bold tracking-widest uppercase leading-tight text-center px-2"
-          style={{ borderColor: "#B4222F", color: "#B4222F", transform: "rotate(-6deg)" }}
+          className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] uppercase px-3 py-1.5 mb-8"
+          style={{ border: `1px solid ${COR.vermelho}`, color: COR.vermelho }}
         >
-          Feito p/ vender em Moçambique
+          <span className="w-1.5 h-1.5" style={{ background: COR.vermelho }} />
+          Feito para vender em Moçambique
         </div>
 
-        <h1
-          className="text-3xl sm:text-4xl md:text-6xl font-bold leading-[1.1] mb-6"
-          style={{ fontFamily: "var(--font-display, 'Georgia', serif)" }}
-        >
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black leading-[1.05] tracking-tight mb-6 uppercase">
           O teu funil de vendas,{" "}
-          <span style={{ color: "#0F6B3C" }}>do zero ao M-Pesa</span>
+          <span style={{ color: COR.verde }}>do zero ao M-Pesa</span>
         </h1>
 
-        <p className="text-base sm:text-lg leading-relaxed mb-10 max-w-2xl mx-auto opacity-60">
+        <p className="text-base sm:text-lg leading-relaxed mb-10 max-w-2xl mx-auto" style={{ color: COR.texto }}>
           Página de vendas, captura de leads e redireccionamento directo pro teu WhatsApp.
           Sem complicação técnica, sem mensalidade escondida — só o que precisas pra fechar vendas hoje.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14 sm:mb-16">
           <Link
             href="/login"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 text-white font-semibold px-8 py-3.5 rounded-xl transition text-sm hover:brightness-110"
-            style={{ background: "#0F6B3C" }}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 text-white font-bold px-8 py-4 transition text-sm uppercase tracking-wide"
+            style={{ background: COR.verde }}
           >
             Criar o meu primeiro funil
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -194,54 +238,49 @@ export default function HomePage() {
               <polyline points="12,5 19,12 12,19" />
             </svg>
           </Link>
-          <Link href="/login" className="w-full sm:w-auto text-center text-sm font-medium opacity-50 hover:opacity-90 transition">
+          <Link href="/login" className="w-full sm:w-auto text-center text-sm font-semibold" style={{ color: COR.texto }}>
             Já tenho conta →
           </Link>
         </div>
+
+        <ScreenshotFrame src="/screenshots/dashboard.png" alt="Visão geral do FunilApp, com os teus funis e leads" label="Painel" accentColor={COR.verde} />
       </section>
 
       {/* Como funciona */}
-      <section className="border-y border-black/[0.06] py-14 sm:py-20 overflow-hidden" style={{ background: "#F5F2EA" }}>
+      <section className="py-14 sm:py-20 overflow-hidden" style={{ background: COR.tinta }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
-          <div className="text-center mb-10 sm:mb-12">
-            <h2 className="font-bold text-2xl sm:text-3xl mb-2" style={{ fontFamily: "var(--font-display, 'Georgia', serif)" }}>
+          <div className="mb-10 sm:mb-12">
+            <span className="text-[11px] font-bold tracking-[0.14em] uppercase" style={{ color: COR.verde }}>
               Como funciona
+            </span>
+            <h2 className="font-black text-2xl sm:text-3xl mt-2 text-white uppercase tracking-tight">
+              Três passos e está no ar
             </h2>
-            <p className="text-sm opacity-50">Três passos e o teu funil está no ar</p>
           </div>
         </div>
 
         <div
           ref={scrollPassosRef}
-          className="flex sm:grid sm:grid-cols-3 gap-4 sm:gap-6 overflow-x-auto sm:overflow-visible pb-2 scroll-smooth px-5 sm:px-6 max-w-5xl mx-auto snap-x snap-mandatory sm:snap-none"
+          className="flex sm:grid sm:grid-cols-3 gap-px overflow-x-auto sm:overflow-visible pb-2 scroll-smooth max-w-5xl mx-auto snap-x snap-mandatory sm:snap-none"
           style={{ scrollbarWidth: "none" }}
         >
-          {PASSOS_COMO_FUNCIONA.map((item) => (
+          {PASSOS_COMO_FUNCIONA.map((item, i) => (
             <div
               key={item.step}
-              className="flex-shrink-0 w-[78vw] sm:w-auto min-w-[240px] snap-start rounded-2xl p-6"
-              style={{ background: "#FCFBF7", border: "1px solid rgba(0,0,0,0.06)" }}
+              className="flex-shrink-0 w-[78vw] sm:w-auto min-w-[240px] snap-start p-6 sm:px-8 sm:py-8"
+              style={{ background: COR.tinta, borderTop: `2px solid ${i % 2 === 0 ? COR.verde : COR.vermelho}` }}
             >
-              <div className="flex items-end justify-between mb-4">
-                <div style={{ color: "#0F6B3C" }}>{item.icon}</div>
-                <span
-                  className="text-3xl font-bold leading-none opacity-20"
-                  style={{ fontFamily: "var(--font-display, 'Georgia', serif)" }}
-                >
+              <div className="flex items-center gap-3 mb-5">
+                <span className="text-white">{item.icon}</span>
+                <span className="text-xs font-bold tracking-widest" style={{ color: i % 2 === 0 ? COR.verde : COR.vermelho }}>
                   {item.step}
                 </span>
               </div>
-              <h3 className="font-semibold text-base mb-2">{item.title}</h3>
-              <p className="text-sm leading-relaxed opacity-55">{item.desc}</p>
+              <h3 className="font-bold text-base mb-2 text-white">{item.title}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#B8B7B2" }}>{item.desc}</p>
             </div>
           ))}
           <div className="flex-shrink-0 w-2 sm:hidden" aria-hidden="true" />
-        </div>
-
-        <div className="flex sm:hidden justify-center gap-1.5 mt-5">
-          {PASSOS_COMO_FUNCIONA.map((item) => (
-            <span key={item.step} className="w-1.5 h-1.5 rounded-full" style={{ background: "#0F6B3C55" }} />
-          ))}
         </div>
       </section>
 
@@ -249,21 +288,18 @@ export default function HomePage() {
       <section className="py-14 sm:py-20 overflow-hidden">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full" style={{ background: "#B4222F" }} />
-              <span className="text-xs font-bold tracking-widest uppercase" style={{ color: "#B4222F" }}>
-                FunilMarket
-              </span>
-            </div>
-            <Link href="/market" className="text-xs font-semibold hover:underline" style={{ color: "#B4222F" }}>
+            <span className="text-xs font-bold tracking-[0.14em] uppercase" style={{ color: COR.vermelho }}>
+              FunilMarket
+            </span>
+            <Link href="/market" className="text-xs font-bold uppercase tracking-wide" style={{ color: COR.vermelho }}>
               Ver tudo →
             </Link>
           </div>
 
-          <h2 className="font-bold text-2xl sm:text-3xl mb-2" style={{ fontFamily: "var(--font-display, 'Georgia', serif)" }}>
+          <h2 className="font-black text-2xl sm:text-3xl mb-2 uppercase tracking-tight">
             Já tens um produto pronto?
           </h2>
-          <p className="text-sm mb-7 sm:mb-8 max-w-xl opacity-55">
+          <p className="text-sm mb-7 sm:mb-8 max-w-xl" style={{ color: COR.texto }}>
             O FunilMarket vive dentro do FunilApp: é onde outros criadores já estão a vender ebooks, cursos
             e templates — com pagamento por M-Pesa e E-Mola direto na conta.
           </p>
@@ -278,57 +314,57 @@ export default function HomePage() {
             {PRODUTOS_DESTAQUE.map((p) => (
               <div
                 key={p.nome}
-                className="flex-shrink-0 w-[38vw] sm:w-48 min-w-[150px] max-w-[200px] snap-start rounded-2xl overflow-hidden transition hover:shadow-md"
-                style={{ background: "#FCFBF7", border: "1px solid rgba(0,0,0,0.06)" }}
+                className="flex-shrink-0 w-[38vw] sm:w-48 min-w-[150px] max-w-[200px] snap-start overflow-hidden transition hover:shadow-lg"
+                style={{ background: COR.branco, border: `1px solid ${COR.tinta}14` }}
               >
-                <div className="relative w-full" style={{ paddingBottom: "125%", background: "#F5F2EA" }}>
+                <div className="relative w-full" style={{ paddingBottom: "125%", background: COR.fundo }}>
                   <img src={p.imagem} alt={p.nome} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                   {p.vendas === PRODUTO_MAIS_VENDIDO && (
                     <span
-                      className="absolute top-2 left-2 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full whitespace-nowrap"
-                      style={{ background: "#C99A2E" }}
+                      className="absolute top-2 left-2 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wide px-2 py-1 whitespace-nowrap"
+                      style={{ background: COR.vermelho }}
                     >
                       Mais vendido
                     </span>
                   )}
                 </div>
                 <div className="p-2.5 sm:p-3">
-                  <span className="text-[10px] opacity-45 font-medium">{p.categoria}</span>
-                  <p className="font-semibold text-xs leading-snug mt-0.5 mb-1.5 sm:mb-2 line-clamp-2 min-h-[2.2em]">
+                  <span className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: COR.texto }}>{p.categoria}</span>
+                  <p className="font-bold text-xs leading-snug mt-0.5 mb-1.5 sm:mb-2 line-clamp-2 min-h-[2.2em]">
                     {p.nome}
                   </p>
-                  <span className="font-bold text-sm" style={{ color: "#B4222F", fontFamily: "var(--font-mono, monospace)" }}>
-                    {p.preco.toLocaleString("pt-MZ")} <span className="text-xs font-medium">MT</span>
+                  <span className="font-black text-sm" style={{ color: COR.verde }}>
+                    {p.preco.toLocaleString("pt-MZ")} <span className="text-xs font-bold">MT</span>
                   </span>
                 </div>
               </div>
             ))}
             <Link
               href="/login"
-              className="flex-shrink-0 w-[38vw] sm:w-44 min-w-[150px] max-w-[190px] snap-start rounded-2xl flex flex-col items-center justify-center text-center p-4 transition hover:brightness-110"
-              style={{ background: "#B4222F" }}
+              className="flex-shrink-0 w-[38vw] sm:w-44 min-w-[150px] max-w-[190px] snap-start flex flex-col items-center justify-center text-center p-4 transition"
+              style={{ background: COR.vermelho }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="mb-2">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              <span className="text-white text-xs font-semibold leading-snug">Vender o teu produto</span>
+              <span className="text-white text-xs font-bold uppercase tracking-wide leading-snug">Vender o teu produto</span>
             </Link>
             <div className="flex-shrink-0 w-4 sm:w-3" aria-hidden="true" />
           </div>
 
           <button
             onClick={() => scroll(scrollProdutosRef, "left")}
-            className="hidden sm:flex absolute left-1 top-[35%] -translate-y-1/2 w-8 h-8 rounded-full items-center justify-center shadow-md hover:brightness-95 transition z-10"
-            style={{ background: "#FCFBF7", border: "1px solid rgba(0,0,0,0.08)" }}
+            className="hidden sm:flex absolute left-1 top-[35%] -translate-y-1/2 w-9 h-9 items-center justify-center shadow-md hover:brightness-95 transition z-10"
+            style={{ background: COR.branco, border: `1px solid ${COR.tinta}1F` }}
             aria-label="Anterior"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
           <button
             onClick={() => scroll(scrollProdutosRef, "right")}
-            className="hidden sm:flex absolute right-1 top-[35%] -translate-y-1/2 w-8 h-8 rounded-full items-center justify-center shadow-md hover:brightness-95 transition z-10"
-            style={{ background: "#FCFBF7", border: "1px solid rgba(0,0,0,0.08)" }}
+            className="hidden sm:flex absolute right-1 top-[35%] -translate-y-1/2 w-9 h-9 items-center justify-center shadow-md hover:brightness-95 transition z-10"
+            style={{ background: COR.branco, border: `1px solid ${COR.tinta}1F` }}
             aria-label="Seguinte"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
@@ -345,11 +381,11 @@ export default function HomePage() {
               <Link
                 href="/market"
                 key={c.nome}
-                className="flex-shrink-0 w-[34vw] min-w-[128px] max-w-[150px] sm:w-36 snap-start rounded-2xl p-3.5 sm:p-4 transition hover:shadow-sm"
-                style={{ background: "#FCFBF7", border: "1px solid rgba(0,0,0,0.06)" }}
+                className="flex-shrink-0 w-[34vw] min-w-[128px] max-w-[150px] sm:w-36 snap-start p-3.5 sm:p-4 transition hover:shadow-sm"
+                style={{ background: COR.branco, borderLeft: `3px solid ${c.cor}`, borderTop: `1px solid ${COR.tinta}12`, borderRight: `1px solid ${COR.tinta}12`, borderBottom: `1px solid ${COR.tinta}12` }}
               >
-                <p className="font-semibold text-xs sm:text-sm mb-0.5 truncate" style={{ color: c.cor }}>{c.nome}</p>
-                <p className="text-[11px] sm:text-xs opacity-50 leading-snug">{c.desc}</p>
+                <p className="font-bold text-xs sm:text-sm mb-0.5 truncate uppercase tracking-wide" style={{ color: c.cor }}>{c.nome}</p>
+                <p className="text-[11px] sm:text-xs" style={{ color: COR.texto }}>{c.desc}</p>
               </Link>
             ))}
             <div className="flex-shrink-0 w-2 sm:hidden" aria-hidden="true" />
@@ -358,48 +394,55 @@ export default function HomePage() {
       </section>
 
       {/* METAS DE VENDEDOR */}
-      <section className="border-y border-black/[0.06] py-14 sm:py-20" style={{ background: "#F5F2EA" }}>
+      <section className="py-14 sm:py-20" style={{ background: COR.fundo }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <div className="text-center mb-10 sm:mb-12">
-            <h2 className="font-bold text-2xl sm:text-3xl mb-2" style={{ fontFamily: "var(--font-display, 'Georgia', serif)" }}>
+            <span className="text-[11px] font-bold tracking-[0.14em] uppercase" style={{ color: COR.verde }}>
+              Reconhecimento
+            </span>
+            <h2 className="font-black text-2xl sm:text-3xl mt-2 uppercase tracking-tight">
               Cada meta tem o seu selo
             </h2>
-            <p className="text-sm max-w-md mx-auto opacity-50">
+            <p className="text-sm max-w-md mx-auto mt-2" style={{ color: COR.texto }}>
               No FunilMarket, vendedor que bate uma meta de faturação ganha o selo — e fica visível pra quem visita o produto.
             </p>
           </div>
 
-          <div className="flex items-end justify-center gap-2.5 sm:gap-4">
-            {METAS_VENDEDOR.map((m, i) => {
-              const escala = ["py-5", "py-6", "py-7", "py-8"][i];
-              return (
-                <div
-                  key={m.meta}
-                  className={`flex-1 max-w-[150px] rounded-2xl px-3 ${escala} text-center relative`}
-                  style={{ background: "#FCFBF7", border: "1px solid rgba(0,0,0,0.06)" }}
-                >
-                  {i === 3 && (
-                    <span
-                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap text-white"
-                      style={{ background: "#C99A2E" }}
-                    >
-                      mais difícil
-                    </span>
-                  )}
-                  <div
-                    className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 rounded-full flex items-center justify-center font-bold text-[11px] sm:text-xs text-white font-mono"
-                    style={{ background: m.cor }}
-                  >
-                    {m.meta}
+          <div className="relative">
+            <div
+              ref={scrollSelosRef}
+              className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory sm:snap-none sm:justify-center"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {SELOS_METAS.map((s) => (
+                <div key={s.meta} className="flex-shrink-0 w-[46vw] sm:w-40 md:w-44 snap-start overflow-hidden shadow-md">
+                  <div className="relative w-full" style={{ aspectRatio: "0.7" }}>
+                    <Image src={s.src} alt={`Selo de meta ${s.meta}`} fill className="object-cover" sizes="(max-width: 768px) 46vw, 176px" />
                   </div>
-                  <p className="font-semibold text-[11px] sm:text-sm mb-1 leading-snug">{m.label}</p>
-                  <p className="text-[10px] sm:text-xs leading-relaxed opacity-50 hidden sm:block">{m.desc}</p>
                 </div>
-              );
-            })}
+              ))}
+              <div className="flex-shrink-0 w-2 sm:hidden" aria-hidden="true" />
+            </div>
+
+            <button
+              onClick={() => scroll(scrollSelosRef, "left")}
+              className="hidden sm:flex absolute left-[-14px] top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center shadow-md hover:brightness-95 transition z-10"
+              style={{ background: COR.branco, border: `1px solid ${COR.tinta}1F` }}
+              aria-label="Anterior"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
+            </button>
+            <button
+              onClick={() => scroll(scrollSelosRef, "right")}
+              className="hidden sm:flex absolute right-[-14px] top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center shadow-md hover:brightness-95 transition z-10"
+              style={{ background: COR.branco, border: `1px solid ${COR.tinta}1F` }}
+              aria-label="Seguinte"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+            </button>
           </div>
-          <p className="text-center text-xs mt-6 sm:hidden opacity-50">
-            As placas sobem de tamanho com a meta — 100K é a mais disputada da plataforma.
+          <p className="text-center text-xs mt-6 sm:hidden" style={{ color: COR.texto }}>
+            Desliza para o lado para ver as 4 placas — 100K é a mais disputada da plataforma.
           </p>
         </div>
       </section>
@@ -408,16 +451,13 @@ export default function HomePage() {
       <section className="max-w-5xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
         <div className="grid md:grid-cols-2 gap-8 sm:gap-10 items-center">
           <div>
-            <span
-              className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full border mb-5"
-              style={{ background: "#0F6B3C11", color: "#0F6B3C", borderColor: "#0F6B3C33" }}
-            >
+            <span className="text-[11px] font-bold tracking-[0.14em] uppercase" style={{ color: COR.verde }}>
               Em expansão
             </span>
-            <h2 className="font-bold text-2xl sm:text-3xl mb-4" style={{ fontFamily: "var(--font-display, 'Georgia', serif)" }}>
+            <h2 className="font-black text-2xl sm:text-3xl mt-2 mb-4 uppercase tracking-tight">
               Vendes algo físico? O Delivery resolve a entrega
             </h2>
-            <p className="text-sm sm:text-base leading-relaxed mb-6 opacity-60">
+            <p className="text-sm sm:text-base leading-relaxed mb-6" style={{ color: COR.texto }}>
               Quem vende produto físico pelo funil — roupa, comida, encomendas — não precisa de sair à procura
               de motoboy. O módulo Delivery, dentro do FunilApp, liga o teu pedido a um entregador e tu acompanhas
               tudo, do "saiu para entrega" até "confirmado pelo cliente".
@@ -428,8 +468,8 @@ export default function HomePage() {
                 "Cliente recebe o número de quem está a levar a encomenda",
                 "Acompanhas o estado da entrega direto no teu painel",
               ].map((t) => (
-                <li key={t} className="flex items-start gap-2.5 text-sm opacity-70">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F6B3C" strokeWidth="2.5" className="flex-shrink-0 mt-0.5">
+                <li key={t} className="flex items-start gap-2.5 text-sm" style={{ color: COR.texto }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={COR.verde} strokeWidth="2.5" className="flex-shrink-0 mt-0.5">
                     <polyline points="20,6 9,17 4,12" />
                   </svg>
                   {t}
@@ -437,52 +477,79 @@ export default function HomePage() {
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl p-6" style={{ background: "#0F6B3C11", border: "1px solid #0F6B3C22" }}>
-            <div className="rounded-xl p-4 mb-3 shadow-sm" style={{ background: "#FCFBF7" }}>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#0F6B3C22" }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F6B3C" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-semibold">Encomenda #2841</p>
-                  <p className="text-xs opacity-45">A caminho · Maputo</p>
-                </div>
-                <span className="text-[10px] font-medium px-2 py-1 rounded-full text-white" style={{ background: "#0F6B3C" }}>Em rota</span>
-              </div>
+          <ScreenshotFrame src="/screenshots/delivery.png" alt="Ecrã de encontrar um delivery em Maputo" label="Delivery" accentColor={COR.verde} />
+        </div>
+      </section>
+
+      {/* GESTOR DO MEU NEGÓCIO */}
+      <section className="py-14 sm:py-20" style={{ background: COR.fundo }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-6">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-10 items-center">
+            <div className="order-1 md:order-2">
+              <ScreenshotFrame src="/screenshots/financeiro.png" alt="Ecrã financeiro do Gestor do meu negócio" label="Financeiro" accentColor={COR.vermelho} />
             </div>
-            <div className="rounded-xl p-4 shadow-sm" style={{ background: "#FCFBF7" }}>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#C99A2E22" }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C99A2E" strokeWidth="2"><polyline points="20,6 9,17 4,12" /></svg>
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-semibold">Encomenda #2839</p>
-                  <p className="text-xs opacity-45">Entregue · Matola</p>
-                </div>
-                <span className="text-[10px] font-medium px-2 py-1 rounded-full text-white" style={{ background: "#C99A2E" }}>Concluída</span>
+
+            <div className="order-2 md:order-1">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-[11px] font-bold tracking-[0.14em] uppercase" style={{ color: COR.vermelho }}>
+                  Gestor do meu negócio
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5" style={{ background: COR.verde, color: COR.branco }}>
+                  Grátis
+                </span>
               </div>
+              <h2 className="font-black text-2xl sm:text-3xl mb-4 uppercase tracking-tight">
+                Sabe se o negócio dá lucro antes de arriscares
+              </h2>
+              <p className="text-sm sm:text-base leading-relaxed mb-6" style={{ color: COR.texto }}>
+                Dentro do FunilApp tens um simulador que te diz quanto precisas vender para não perder dinheiro,
+                clientes com histórico de compras, e uma visão financeira completa — sem precisares de outra
+                ferramenta nem de saber nada de contabilidade.
+              </p>
+              <ul className="space-y-3 mb-7">
+                {[
+                  "Mete preço, custo e despesas — vê o lucro em tempo real",
+                  "Descobre quantas vendas precisas por dia para não perder",
+                  "Receita, despesas e lucro líquido, tudo num só sítio",
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-2.5 text-sm" style={{ color: COR.texto }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={COR.vermelho} strokeWidth="2.5" className="flex-shrink-0 mt-0.5">
+                      <polyline points="20,6 9,17 4,12" />
+                    </svg>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 text-white font-bold px-6 py-3.5 transition text-sm uppercase tracking-wide"
+                style={{ background: COR.vermelho }}
+              >
+                Ver o Gestor do meu negócio
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12,5 19,12 12,19" />
+                </svg>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-16 sm:py-24">
+      <section className="py-16 sm:py-24" style={{ background: COR.tinta }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
-          <div className="pl-5 sm:pl-8" style={{ borderLeft: "4px solid #B4222F" }}>
-            <h2
-              className="font-bold text-2xl sm:text-4xl leading-tight mb-4 max-w-lg"
-              style={{ fontFamily: "var(--font-display, 'Georgia', serif)" }}
-            >
+          <div className="pl-5 sm:pl-8" style={{ borderLeft: `4px solid ${COR.verde}` }}>
+            <h2 className="font-black text-2xl sm:text-4xl leading-tight mb-4 max-w-lg text-white uppercase tracking-tight">
               O funil leva cinco minutos. A primeira venda é contigo.
             </h2>
-            <p className="text-sm sm:text-base mb-7 max-w-md opacity-60">
+            <p className="text-sm sm:text-base mb-7 max-w-md" style={{ color: "#B8B7B2" }}>
               Sem cartão, sem mensalidade pra testar. Cria a conta e o link já sai pronto pra colar no status.
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-white font-semibold px-6 py-3 rounded-lg transition text-sm hover:brightness-110"
-              style={{ background: "#0F6B3C" }}
+              className="inline-flex items-center gap-2 text-white font-bold px-6 py-3.5 transition text-sm uppercase tracking-wide"
+              style={{ background: COR.verde }}
             >
               Criar conta grátis
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -495,13 +562,13 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-6" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+      <footer className="py-6" style={{ borderTop: `1px solid ${COR.tinta}12` }}>
         <div className="max-w-6xl mx-auto px-5 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 cursor-default select-none" onClick={handleLogoClick}>
-            <Image src="/logo.png" alt="FunilApp" width={24} height={24} className="rounded-md" />
-            <span className="font-bold text-sm">FunilApp</span>
+            <Image src="/logo.png" alt="FunilApp" width={24} height={24} />
+            <span className="font-black text-sm uppercase tracking-tight">FunilApp</span>
           </div>
-          <p className="text-xs opacity-40">FunilMarket e Delivery fazem parte do FunilApp · © 2026</p>
+          <p className="text-xs" style={{ color: COR.texto }}>FunilMarket, Delivery e Gestor do meu negócio fazem parte do FunilApp · © 2026</p>
         </div>
       </footer>
       <FaixaIdentidade />

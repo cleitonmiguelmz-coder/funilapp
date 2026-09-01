@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -16,13 +16,12 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // ── Plano do usuário em tempo real ──
   const [plano, setPlano] = useState<string>("free");
 
   useEffect(() => {
@@ -124,7 +123,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        {/* Logo */}
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center gap-2.5">
             <Image src="/logo.png" alt="FunilApp" width={32} height={32} className="rounded-lg" />
@@ -132,7 +130,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => {
             const isActive =
@@ -160,14 +157,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             );
           })}
 
-          {/* Separador */}
           <div className="pt-3 pb-1">
             <p className="text-gray-300 text-xs font-semibold uppercase tracking-wider px-3">
               Serviços
             </p>
           </div>
 
-          {/* Delivery — encontrar */}
           <Link
             href="/delivery"
             onClick={() => setSidebarOpen(false)}
@@ -190,7 +185,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             Encontrar Delivery
           </Link>
 
-          {/* Ser Delivery */}
           <Link
             href="/delivery/registar"
             onClick={() => setSidebarOpen(false)}
@@ -213,7 +207,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             Ser Delivery
           </Link>
 
-          {/* FunilMarket */}
           <Link
             href="/market"
             onClick={() => setSidebarOpen(false)}
@@ -235,7 +228,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             FunilMarket
           </Link>
 
-          {/* Gestor do meu negócio */}
           <Link
             href="/negocio"
             onClick={() => setSidebarOpen(false)}
@@ -279,7 +271,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </nav>
 
-        {/* User */}
         <div className="px-3 py-4 border-t border-gray-100">
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50 mb-2">
             <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
@@ -308,7 +299,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white">
           <button
@@ -328,9 +318,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="w-8" />
         </header>
 
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );
