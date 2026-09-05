@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Entrar | FunilApp",
-  description: "Acesse sua conta FunilApp para criar e gerir os seus funis de vendas com captação de leads via WhatsApp.",
+  title: "FunilApp — Funis de Vendas com WhatsApp para Moçambique",
+  description: "Crie funis de vendas, capte leads e receba contactos direto no WhatsApp. Plataforma feita para empreendedores e vendedores em Moçambique.",
 };
 
 export default function LoginLayout({
